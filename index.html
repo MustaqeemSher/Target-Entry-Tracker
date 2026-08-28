@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Production Ledger — Monthly Target Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#f6f4ee; --panel:#ffffff; --ink:#22262b; --ink-soft:#5b6169;
+    --line:#d9d3c4; --line-strong:#b9b2a0; --accent:#2c4a4a; --accent-soft:#e4ece9;
+    --friday-bg:#bfe3ae; --friday-fg:#1f4d1a; --sunday-bg:#f3b2a8; --sunday-fg:#7a1f14;
+    --danger:#b8402f; --warn:#a9660f; --warn-bg:#fdf1de;
+    --shadow: 0 1px 2px rgba(30,30,20,0.06), 0 8px 24px -12px rgba(30,30,20,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans', system-ui, sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;}
+  .wrap{max-width:100%;padding:14px;padding-bottom:60px;}
+
+  #globalBanner{display:none;position:sticky;top:0;left:0;right:0;z-index:100;background:var(--warn-bg);color:var(--warn);border-bottom:1px solid #e8c98a;padding:9px 14px;font-size:12.5px;font-weight:600;}
+  #globalBanner.show{display:block;}
+  #globalBanner button{float:right;background:none;border:none;color:var(--warn);font-weight:700;cursor:pointer;font-size:13px;}
+  #configWarning{display:none;background:#fbeceA;color:var(--danger);border-bottom:1px solid #e2b6ac;padding:10px 14px;font-size:12.5px;line-height:1.5;}
+  #configWarning.show{display:block;}
+  #configWarning code{background:#fff;padding:1px 5px;border-radius:4px;}
+
+  #authView{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .auth-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:100%;max-width:380px;padding:28px 26px;}
+  .auth-card h1{font-family:'Source Serif 4',serif;font-size:22px;margin:0 0 4px;text-align:center;}
+  .auth-card p.sub{text-align:center;color:var(--ink-soft);font-size:13px;margin:0 0 20px;}
+  .tabs{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+  .tab-btn{flex:1;padding:9px 0;background:var(--panel);border:none;font-family:inherit;font-weight:600;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .tab-btn.active{background:var(--accent);color:#fff;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;}
+  .field input{width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:7px;font-family:inherit;font-size:14px;background:#fff;}
+  .field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+  .auth-form{display:none;}
+  .auth-form.active{display:block;}
+  .auth-submit{width:100%;padding:10px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px;}
+  .auth-submit:hover{opacity:.92;}
+  .auth-submit[disabled]{opacity:.6;cursor:wait;}
+  .auth-msg{font-size:12.5px;margin-top:10px;text-align:center;min-height:16px;}
+  .auth-msg.error{color:var(--danger);}
+  .auth-msg.ok{color:#2c6b3e;}
+
+  #appView{display:none;}
+  .topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .brand{display:flex;flex-direction:column;gap:2px;}
+  .brand h1{font-family:'Source Serif 4', serif;font-weight:700;font-size:22px;margin:0;letter-spacing:0.2px;}
+  .brand small{color:var(--ink-soft);font-size:12px;}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  select, .btn, input.control-input{font-family:inherit;font-size:13.5px;border-radius:7px;border:1px solid var(--line-strong);padding:8px 12px;background:var(--panel);color:var(--ink);}
+  select{min-width:170px;cursor:pointer;}
+  .btn{cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:transform .05s ease, background .15s ease, box-shadow .15s ease;white-space:nowrap;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn-primary:hover{box-shadow:var(--shadow);}
+  .btn-ghost{background:var(--panel);}
+  .btn-ghost:hover{background:var(--accent-soft);}
+  .btn-danger-outline{color:var(--danger);border-color:#e2b6ac;background:#fff;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+  .status{font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono', monospace;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#8fae86;display:inline-block;}
+  .dot.saving{background:#d6a13c;}
+  .dot.error{background:#b8402f;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+  .empty-state{padding:60px 24px;text-align:center;color:var(--ink-soft);}
+  .empty-state h2{font-family:'Source Serif 4',serif;color:var(--ink);margin-bottom:6px;font-size:19px;}
+  .empty-state .btn{margin-top:14px;}
+
+  .table-scroll{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;}
+  table.ledger{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;font-size:13px;}
+  table.ledger thead th{background:#efeadd;border-bottom:1px solid var(--line-strong);border-right:1px solid var(--line);padding:8px 6px;font-weight:600;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;text-align:center;white-space:nowrap;}
+  table.ledger th.day-friday{background:var(--friday-bg);color:var(--friday-fg);}
+  table.ledger th.day-sunday{background:var(--sunday-bg);color:var(--sunday-fg);}
+  table.ledger td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:4px;text-align:center;vertical-align:middle;}
+  table.ledger tbody tr:nth-child(even) td{background:#fbfaf6;}
+  table.ledger tbody tr:hover td{background:#f1efe5;}
+  th.col-actions,td.col-actions{min-width:38px;width:38px;background:#f7e9e7;}
+  th.col-sno,td.col-sno{min-width:38px;width:38px;}
+  th.col-target,td.col-target{min-width:80px;}
+  th.col-brand,td.col-brand{min-width:150px;text-align:left;}
+  th.col-ctns,td.col-ctns{min-width:70px;}
+  th.col-emp,td.col-emp{min-width:120px;}
+  th.col-emp input{font-weight:700;text-transform:none;letter-spacing:0;text-align:center;background:#fff;border:1px solid var(--line-strong);border-radius:5px;padding:5px;font-size:12px;width:100%;color:var(--ink);}
+  th.day-col,td.day-col{min-width:46px;width:46px;}
+  th.col-total,td.col-total{min-width:80px;font-weight:700;}
+
+  td input{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13px;text-align:center;padding:6px 4px;border-radius:5px;color:var(--ink);}
+  td.col-brand input{text-align:left;}
+  td.col-sno span{color:var(--ink-soft);font-weight:600;}
+  td input:hover{border-color:var(--line);}
+  td input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px var(--accent-soft);}
+  .total-val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
+  .del-btn{border:none;background:#fff;color:var(--danger);cursor:pointer;font-size:16px;line-height:1;width:28px;height:28px;border-radius:6px;border:1px solid #e2b6ac;}
+  .del-btn:hover{background:var(--danger);color:#fff;}
+  tfoot td{border-top:2px solid var(--line-strong);background:var(--accent-soft) !important;font-weight:700;padding:8px 4px;}
+  tfoot .col-brand{text-align:left;font-family:'Source Serif 4',serif;font-size:13px;}
+  tfoot .day-col{font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  tfoot .col-total{font-family:'IBM Plex Mono',monospace;color:var(--accent);}
+  .footer-actions{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:#faf9f4;flex-wrap:wrap;gap:8px;}
+  .hint{font-size:12px;color:var(--ink-soft);}
+  #printFallback{font-size:12.5px;margin-top:6px;}
+  #printFallback a{color:var(--accent);font-weight:600;}
+  .backup-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .backup-row .btn{font-size:12.5px;padding:7px 10px;}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(20,20,15,0.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .modal-backdrop.show{display:flex;}
+  .modal{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+  .modal h3{margin:0 0 14px;font-family:'Source Serif 4',serif;font-size:18px;}
+  .modal p{font-size:13.5px;color:var(--ink-soft);margin:0 0 16px;}
+  .modal label{font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:4px;}
+  .modal select, .modal input{width:100%;margin-bottom:14px;}
+  .modal-err{font-size:12.5px;color:var(--danger);margin:-8px 0 12px;min-height:14px;}
+  .modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+
+  @media (max-width:640px){
+    .brand h1{font-size:18px;}
+    .controls{width:100%;flex-direction:column;align-items:stretch;}
+    .controls select, .controls .btn{width:100%;min-width:0;box-sizing:border-box;}
+    #reportSelect{width:100%;max-width:100%;font-size:15px;padding:10px 12px;}
+    table.ledger{font-size:12px;}
+    th.col-brand,td.col-brand{min-width:110px;} th.col-emp,td.col-emp{min-width:90px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================================================================
+  SETUP (do this once before deploying):
+  1. Create a free project at https://supabase.com
+  2. In the SQL editor, run the SQL from SETUP.sql (shipped alongside this file)
+  3. Go to Project Settings -> API, copy the "Project URL" and "anon public" key
+  4. Paste them into SUPABASE_URL and SUPABASE_ANON_KEY below
+  5. Deploy this single file to Vercel (or any static host)
+====================================================================== -->
+<script>
+  window.SUPABASE_URL = "https://tdexxdtjfzhntkrjrpfn.supabase.co";
+  window.SUPABASE_ANON_KEY = "sb_publishable_fQ_6NDDLhGIfGbuNzpbgbg_twLfXFts";
+</script>
+
+<div id="configWarning"><strong>Setup needed:</strong> open this file, find the two lines near the top starting with <code>window.SUPABASE_URL</code>, and paste in your Supabase project URL and anon key (see SETUP.sql / the setup guide for exact steps). The app can't save anything until that's done.</div>
+<div id="globalBanner"><button onclick="document.getElementById('globalBanner').classList.remove('show')">✕</button><span id="globalBannerText"></span></div>
+
+<div id="authView">
+  <div class="auth-card">
+    <h1>Production Ledger</h1>
+    <p class="sub">Sign in to your private workspace</p>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabLogin">Log In</button>
+      <button class="tab-btn" id="tabRegister">Register</button>
+    </div>
+
+    <form class="auth-form active" id="loginForm">
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" autocomplete="current-password" required></div>
+      <button type="submit" class="auth-submit" id="loginSubmitBtn">Log In</button>
+      <div class="auth-msg" id="loginMsg"></div>
+    </form>
+
+    <form class="auth-form" id="registerForm">
+      <div class="field"><label>Full name</label><input type="text" id="regName" required></div>
+      <div class="field"><label>Email</label><input type="email" id="regEmail" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input type="password" id="regPassword" autocomplete="new-password" required></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="regPassword2" autocomplete="new-password" required></div>
+      <button type="submit" class="auth-submit" id="regSubmitBtn">Create Account</button>
+      <div class="auth-msg" id="regMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appView">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1>Production Ledger</h1>
+        <small id="subtitle">Loading…</small>
+      </div>
+      <div class="controls">
+        <select id="reportSelect"></select>
+        <button class="btn btn-ghost" id="newReportBtn">+ New Month</button>
+        <button class="btn btn-ghost" id="printBtn" disabled>🖨 Print</button>
+        <button class="btn btn-danger-outline" id="deleteReportBtn" disabled>Delete month</button>
+        <button class="btn btn-ghost" id="logoutBtn">Log out</button>
+      </div>
+    </div>
+    <div style="margin:-6px 0 14px;font-size:12.5px;color:var(--ink-soft);" id="whoami"></div>
+
+    <div class="panel" id="panel">
+      <div class="empty-state" id="emptyState">
+        <h2>No report yet</h2>
+        <p>Create a month to start entering targets and daily production.</p>
+        <button class="btn btn-primary" id="emptyNewBtn">+ Create your first month</button>
+      </div>
+
+      <div id="tableHolder" style="display:none;">
+        <p class="hint" style="margin:10px 12px 0;">The red ✕ button on the left of each row deletes that row (with a confirmation).</p>
+        <div class="table-scroll">
+          <table class="ledger" id="ledgerTable">
+            <thead><tr id="headRow"></tr></thead>
+            <tbody id="bodyRows"></tbody>
+            <tfoot><tr id="footRow"></tr></tfoot>
+          </table>
+        </div>
+        <div class="footer-actions">
+          <button class="btn btn-primary" id="addRowBtn">+ Add Brand Row</button>
+          <span class="status" id="statusEl"><span class="dot" id="statusDot"></span><span id="statusText">Saved</span></span>
+        </div>
+      </div>
+    </div>
+    <div id="printFallback"></div>
+
+    <div class="backup-row">
+      <button class="btn btn-ghost" id="exportBtn">⬇ Download backup (.json)</button>
+    </div>
+    <p class="hint" style="margin-top:10px;">Every change is saved straight to your Supabase database — a real, permanent database.</p>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3>Create a new monthly report</h3>
+    <label for="monthPick">Month</label>
+    <select id="monthPick"></select>
+    <label for="yearPick">Year</label>
+    <input type="number" id="yearPick" min="2020" max="2100" step="1">
+    <div class="modal-err" id="modalErr"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="modalCancel">Cancel</button>
+      <button class="btn btn-primary" id="modalCreate">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="confirmBackdrop">
+  <div class="modal">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMsg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+      <button class="btn btn-danger-outline" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const $ = (id) => document.getElementById(id);
+
+  function showBanner(msg){ $('globalBannerText').textContent = msg; $('globalBanner').classList.add('show'); }
+  window.addEventListener('error', (e)=>{ showBanner('Something went wrong: ' + (e.message || 'unknown error') + '.'); });
+  window.addEventListener('unhandledrejection', (e)=>{ showBanner('Something went wrong: ' + (e.reason && e.reason.message ? e.reason.message : e.reason) + '.'); });
+
+  if(!window.SUPABASE_URL || window.SUPABASE_URL.indexOf('PASTE_YOUR') === 0 || !window.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY.indexOf('PASTE_YOUR') === 0){
+    $('configWarning').classList.add('show');
+  }
+  const supabase = (window.supabase && window.SUPABASE_URL && window.SUPABASE_URL.indexOf('PASTE_YOUR') !== 0)
+    ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
+    : null;
+
+  // ---------------- confirm modal ----------------
+  let confirmCb = null;
+  function showConfirm(title, msg, okLabel, onOk){
+    $('confirmTitle').textContent = title; $('confirmMsg').textContent = msg; $('confirmOk').textContent = okLabel || 'Delete';
+    confirmCb = onOk; $('confirmBackdrop').classList.add('show');
+  }
+  $('confirmCancel').addEventListener('click', ()=>{ $('confirmBackdrop').classList.remove('show'); confirmCb=null; });
+  $('confirmOk').addEventListener('click', ()=>{ $('confirmBackdrop').classList.remove('show'); if(confirmCb) confirmCb(); confirmCb=null; });
+
+  // ---------------- auth ----------------
+  let session = null; // supabase auth session
+
+  function showAuthView(){ $('authView').style.display='flex'; $('appView').style.display='none'; }
+  function showAppView(){
+    $('authView').style.display='none'; $('appView').style.display='block';
+    const name = (session.user.user_metadata && session.user.user_metadata.display_name) || session.user.email;
+    $('whoami').textContent = 'Logged in as ' + name + '  ·  ' + session.user.email;
+    initApp();
+  }
+
+  $('tabLogin').addEventListener('click', ()=>{ $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active'); $('loginForm').classList.add('active'); $('registerForm').classList.remove('active'); });
+  $('tabRegister').addEventListener('click', ()=>{ $('tabRegister').classList.add('active'); $('tabLogin').classList.remove('active'); $('registerForm').classList.add('active'); $('loginForm').classList.remove('active'); });
+
+  $('registerForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = $('regMsg'); msg.className='auth-msg'; msg.textContent='';
+    if(!supabase){ msg.className='auth-msg error'; msg.textContent='Database is not configured yet — see the setup notice above.'; return; }
+    const btn = $('regSubmitBtn'); btn.disabled = true;
+    try{
+      const name = $('regName').value.trim();
+      const email = $('regEmail').value.trim();
+      const pw = $('regPassword').value;
+      const pw2 = $('regPassword2').value;
+      if(!name || !email || !pw){ msg.className='auth-msg error'; msg.textContent='Please fill in every field.'; return; }
+      if(pw.length < 6){ msg.className='auth-msg error'; msg.textContent='Password must be at least 6 characters.'; return; }
+      if(pw !== pw2){ msg.className='auth-msg error'; msg.textContent='Passwords do not match.'; return; }
+      const { data, error } = await supabase.auth.signUp({ email, password: pw, options: { data: { display_name: name } } });
+      if(error){ msg.className='auth-msg error'; msg.textContent=error.message; return; }
+      if(!data.session){
+        msg.className='auth-msg ok'; msg.textContent='Account created! Check your email to confirm it, then log in.';
+        $('registerForm').reset();
+        setTimeout(()=>{ $('tabLogin').click(); $('loginEmail').value = email; }, 900);
+      } else {
+        session = data.session; showAppView();
+      }
+    } finally { btn.disabled = false; }
+  });
+
+  $('loginForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = $('loginMsg'); msg.className='auth-msg'; msg.textContent='';
+    if(!supabase){ msg.className='auth-msg error'; msg.textContent='Database is not configured yet — see the setup notice above.'; return; }
+    const btn = $('loginSubmitBtn'); btn.disabled = true;
+    try{
+      const email = $('loginEmail').value.trim();
+      const pw = $('loginPassword').value;
+      if(!email || !pw){ msg.className='auth-msg error'; msg.textContent='Enter your email and password.'; return; }
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+      if(error){ msg.className='auth-msg error'; msg.textContent=error.message; return; }
+      session = data.session; showAppView();
+    } finally { btn.disabled = false; }
+  });
+
+  $('logoutBtn').addEventListener('click', async ()=>{
+    if(supabase) await supabase.auth.signOut();
+    session = null;
+    $('loginForm').reset(); $('loginMsg').textContent='';
+    showAuthView();
+  });
+
+  // ---------------- app state ----------------
+  let reportsList = [];    // [{id, year, month}]
+  let currentReport = null; // {id, year, month, employee_name, rows:[...]}
+  let saveTimer = null;
+  let appInitDone = false;
+
+  function daysInMonth(year, month){ return new Date(year, month, 0).getDate(); }
+  function weekday(year, month, day){ return new Date(year, month-1, day).getDay(); }
+  function labelFor(year, month){ return MONTH_NAMES[month-1] + ' ' + year; }
+  function shortLabelFor(year, month){ return MONTH_NAMES[month-1].slice(0,3) + ' ' + year; }
+  function uid(){ return 'r' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+  function setStatus(state){
+    const dot = $('statusDot'), text = $('statusText');
+    if(state === 'saving'){ dot.className='dot saving'; text.textContent='Saving…'; }
+    else if(state === 'error'){ dot.className='dot error'; text.textContent='Save failed — retrying…'; }
+    else { dot.className='dot'; text.textContent='Saved'; }
+  }
+
+  async function fetchReportsList(){
+    const { data, error } = await supabase.from('reports').select('id,year,month').eq('user_id', session.user.id).order('year').order('month');
+    if(error){ showBanner('Could not load your reports: ' + error.message); reportsList = []; return; }
+    reportsList = data || [];
+  }
+
+  async function fetchReport(id){
+    const { data, error } = await supabase.from('reports').select('*').eq('id', id).maybeSingle();
+    if(error){ showBanner('Could not load that report: ' + error.message); return null; }
+    return data;
+  }
+
+  function queueSave(){ setStatus('saving'); clearTimeout(saveTimer); saveTimer = setTimeout(()=> attemptSave(0), 500); }
+
+  async function attemptSave(retryCount){
+    const payload = {
+      user_id: session.user.id,
+      year: currentReport.year,
+      month: currentReport.month,
+      employee_name: currentReport.employee_name || '',
+      rows: currentReport.rows
+    };
+    const { data, error } = await supabase.from('reports').upsert(payload, { onConflict: 'user_id,year,month' }).select().maybeSingle();
+    if(!error){ if(data) currentReport.id = data.id; setStatus('saved'); }
+    else if(retryCount < 3){ setStatus('error'); setTimeout(()=> attemptSave(retryCount+1), 1500); }
+    else { setStatus('error'); showBanner('Your last change could not be saved: ' + error.message); }
+  }
+
+  function populateReportSelect(){
+    const sel = $('reportSelect'); sel.innerHTML = '';
+    if(reportsList.length === 0){ const opt = document.createElement('option'); opt.textContent = 'No reports yet'; sel.appendChild(opt); sel.disabled = true; return; }
+    sel.disabled = false;
+    reportsList.forEach(item=>{
+      const opt = document.createElement('option'); opt.value = item.id; opt.textContent = shortLabelFor(item.year, item.month);
+      if(currentReport && item.id === currentReport.id) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function rowTotal(row){ let sum = 0; for(const k in row.days){ const v = parseFloat(row.days[k]); if(!isNaN(v)) sum += v; } return sum; }
+
+  function renderTable(){
+    const holder = $('tableHolder'), empty = $('emptyState');
+    if(!currentReport){
+      holder.style.display = 'none'; empty.style.display = 'block';
+      $('printBtn').disabled = true; $('deleteReportBtn').disabled = true;
+      $('subtitle').textContent = 'No report selected'; $('printFallback').innerHTML = '';
+      return;
+    }
+    holder.style.display = 'block'; empty.style.display = 'none';
+    $('printBtn').disabled = false; $('deleteReportBtn').disabled = false;
+    $('subtitle').textContent = labelFor(currentReport.year, currentReport.month) + ' · ' + currentReport.rows.length + ' brand row(s)';
+    if(currentReport.employee_name === undefined || currentReport.employee_name === null){
+      currentReport.employee_name = (session.user.user_metadata && session.user.user_metadata.display_name) || '';
+    }
+
+    const nDays = daysInMonth(currentReport.year, currentReport.month);
+    const headRow = $('headRow'); headRow.innerHTML = '';
+    const actTh0 = document.createElement('th'); actTh0.className = 'col-actions'; headRow.appendChild(actTh0);
+    [['col-sno','S.No'],['col-target','Target'],['col-brand','Brand'],['col-ctns',"Ctn's"]].forEach(c=>{
+      const th = document.createElement('th'); th.className = c[0]; th.textContent = c[1]; headRow.appendChild(th);
+    });
+    const empTh = document.createElement('th'); empTh.className = 'col-emp';
+    const empInput = document.createElement('input');
+    empInput.type = 'text'; empInput.value = currentReport.employee_name || ''; empInput.placeholder = 'Employee name';
+    empInput.addEventListener('input', ()=>{ currentReport.employee_name = empInput.value; queueSave(); });
+    empTh.appendChild(empInput); headRow.appendChild(empTh);
+
+    for(let d=1; d<=nDays; d++){
+      const th = document.createElement('th'); th.className = 'day-col';
+      const wd = weekday(currentReport.year, currentReport.month, d);
+      if(wd===5) th.className += ' day-friday'; if(wd===0) th.className += ' day-sunday';
+      th.textContent = d; headRow.appendChild(th);
+    }
+    const totalTh = document.createElement('th'); totalTh.className = 'col-total'; totalTh.textContent = 'Total'; headRow.appendChild(totalTh);
+
+    const body = $('bodyRows'); body.innerHTML = '';
+    currentReport.rows.forEach((row, idx)=>{
+      const tr = document.createElement('tr');
+      const actTd = document.createElement('td'); actTd.className = 'col-actions';
+      const delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.innerHTML = '✕'; delBtn.title = 'Delete this row';
+      delBtn.addEventListener('click', ()=>{
+        showConfirm('Delete row?', 'Remove "' + (row.brand || 'this brand') + '" from this report?', 'Delete', ()=>{
+          currentReport.rows.splice(idx,1); queueSave(); renderTable();
+        });
+      });
+      actTd.appendChild(delBtn); tr.appendChild(actTd);
+
+      const snoTd = document.createElement('td'); snoTd.className = 'col-sno'; snoTd.innerHTML = '<span>'+(idx+1)+'</span>'; tr.appendChild(snoTd);
+      tr.appendChild(makeInputCell('col-target', row.target, 'number', (val)=>{ row.target = val; queueSave(); }));
+      tr.appendChild(makeInputCell('col-brand', row.brand, 'text', (val)=>{ row.brand = val; queueSave(); }, 'Brand name'));
+      tr.appendChild(makeInputCell('col-ctns', row.ctns, 'number', (val)=>{ row.ctns = val; queueSave(); }));
+      tr.appendChild(makeInputCell('col-emp', row.empVal, 'number', (val)=>{ row.empVal = val; queueSave(); }));
+
+      for(let d=1; d<=nDays; d++){
+        const td = document.createElement('td'); td.className = 'day-col';
+        const inp = document.createElement('input'); inp.type = 'number'; inp.inputMode='decimal';
+        inp.value = row.days[d] !== undefined && row.days[d] !== null ? row.days[d] : '';
+        inp.addEventListener('input', ()=>{ row.days[d] = inp.value === '' ? null : inp.value; totalSpan.textContent = rowTotal(row); queueSave(); updateFooter(); });
+        td.appendChild(inp); tr.appendChild(td);
+      }
+
+      const totalTd = document.createElement('td'); totalTd.className = 'col-total';
+      const totalSpan = document.createElement('span'); totalSpan.className = 'total-val'; totalSpan.textContent = rowTotal(row);
+      totalTd.appendChild(totalSpan); tr.appendChild(totalTd);
+      body.appendChild(tr);
+    });
+    updateFooter();
+  }
+
+  function makeInputCell(cls, value, type, onChange, placeholder){
+    const td = document.createElement('td'); td.className = cls;
+    const inp = document.createElement('input'); inp.type = type;
+    if(type==='number') inp.inputMode = 'decimal';
+    if(placeholder) inp.placeholder = placeholder;
+    inp.value = (value===undefined || value===null) ? '' : value;
+    inp.addEventListener('input', ()=> onChange(inp.value===''?'':inp.value));
+    td.appendChild(inp); return td;
+  }
+
+  function updateFooter(){
+    if(!currentReport) return;
+    const nDays = daysInMonth(currentReport.year, currentReport.month);
+    const foot = $('footRow'); foot.innerHTML = '';
+    let targetSum = 0, ctnsSum = 0, empSum = 0;
+    currentReport.rows.forEach(row=>{
+      const t = parseFloat(row.target); if(!isNaN(t)) targetSum += t;
+      const c = parseFloat(row.ctns); if(!isNaN(c)) ctnsSum += c;
+      const e = parseFloat(row.empVal); if(!isNaN(e)) empSum += e;
+    });
+    const actBlank = document.createElement('td'); actBlank.className='col-actions'; foot.appendChild(actBlank);
+    const snoBlank = document.createElement('td'); snoBlank.className='col-sno'; foot.appendChild(snoBlank);
+    const targetTd = document.createElement('td'); targetTd.className='col-target'; targetTd.textContent = targetSum || ''; foot.appendChild(targetTd);
+    const labelTd = document.createElement('td'); labelTd.className = 'col-brand'; labelTd.textContent = 'Grand Total'; foot.appendChild(labelTd);
+    const ctnsTd = document.createElement('td'); ctnsTd.className='col-ctns'; ctnsTd.textContent = ctnsSum || ''; foot.appendChild(ctnsTd);
+    const empTd = document.createElement('td'); empTd.className='col-emp'; empTd.textContent = empSum || ''; foot.appendChild(empTd);
+    let grand = 0;
+    for(let d=1; d<=nDays; d++){
+      let sum = 0; currentReport.rows.forEach(row=>{ const v = parseFloat(row.days[d]); if(!isNaN(v)) sum += v; });
+      grand += sum;
+      const td = document.createElement('td'); td.className = 'day-col'; td.textContent = sum || ''; foot.appendChild(td);
+    }
+    const gtd = document.createElement('td'); gtd.className = 'col-total'; gtd.textContent = grand; foot.appendChild(gtd);
+  }
+
+  async function selectReport(id){
+    const rep = await fetchReport(id);
+    currentReport = rep ? { id: rep.id, year: rep.year, month: rep.month, employee_name: rep.employee_name, rows: rep.rows || [] } : null;
+    renderTable();
+  }
+
+  function openModal(){
+    const monthSel = $('monthPick'); monthSel.innerHTML = '';
+    MONTH_NAMES.forEach((name,i)=>{ const opt = document.createElement('option'); opt.value = i+1; opt.textContent = name; monthSel.appendChild(opt); });
+    const now = new Date(); monthSel.value = now.getMonth()+1; $('yearPick').value = now.getFullYear();
+    $('modalErr').textContent = ''; $('modalBackdrop').classList.add('show');
+  }
+  function closeModal(){ $('modalBackdrop').classList.remove('show'); }
+
+  async function createReport(){
+    const month = parseInt($('monthPick').value,10);
+    const year = parseInt($('yearPick').value,10);
+    const errEl = $('modalErr');
+    if(!year || year < 2000 || year > 2200){ errEl.textContent = 'Please enter a valid year.'; return; }
+    if(reportsList.find(r=>r.year===year && r.month===month)){
+      const existing = reportsList.find(r=>r.year===year && r.month===month);
+      closeModal(); await selectReport(existing.id); $('reportSelect').value = existing.id; return;
+    }
+    const payload = { user_id: session.user.id, year, month, employee_name: (session.user.user_metadata && session.user.user_metadata.display_name) || '', rows: [] };
+    const { data, error } = await supabase.from('reports').insert(payload).select().single();
+    if(error){ errEl.textContent = 'Could not create report: ' + error.message; return; }
+    await fetchReportsList();
+    populateReportSelect();
+    closeModal();
+    await selectReport(data.id);
+    $('reportSelect').value = data.id;
+  }
+
+  function deleteReport(){
+    if(!currentReport) return;
+    showConfirm('Delete month?', 'Delete the ' + labelFor(currentReport.year, currentReport.month) + ' report? This cannot be undone.', 'Delete month', async ()=>{
+      const { error } = await supabase.from('reports').delete().eq('id', currentReport.id);
+      if(error){ showBanner('Could not delete: ' + error.message); return; }
+      await fetchReportsList();
+      currentReport = null;
+      populateReportSelect();
+      if(reportsList.length){ await selectReport(reportsList[reportsList.length-1].id); $('reportSelect').value = currentReport.id; }
+      else { renderTable(); }
+    });
+  }
+
+  function addRow(){
+    currentReport.rows.push({ id: uid(), target:'', brand:'', ctns:'', empVal:'', days:{} });
+    queueSave(); renderTable();
+  }
+
+  // ---------------- print ----------------
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function buildPrintDocument(){
+    const nDays = daysInMonth(currentReport.year, currentReport.month);
+    const empLabel = escapeHtml(currentReport.employee_name || 'Employee');
+    let rows = '';
+    currentReport.rows.forEach((row, idx)=>{
+      rows += '<tr><td>'+(idx+1)+'</td><td>'+escapeHtml(row.target||'')+'</td><td class="p-brand">'+escapeHtml(row.brand||'')+'</td><td>'+escapeHtml(row.ctns||'')+'</td><td>'+escapeHtml(row.empVal||'')+'</td>';
+      for(let d=1; d<=nDays; d++){
+        const wd = weekday(currentReport.year, currentReport.month, d);
+        const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
+        const v = row.days[d];
+        rows += '<td class="'+cls+'">'+(v===undefined||v===null||v===''?'':escapeHtml(v))+'</td>';
+      }
+      rows += '<td>'+rowTotal(row)+'</td></tr>';
+    });
+    let headDays = '';
+    for(let d=1; d<=nDays; d++){
+      const wd = weekday(currentReport.year, currentReport.month, d);
+      const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
+      headDays += '<th class="'+cls+'">'+d+'</th>';
+    }
+    let footDays = ''; let grand = 0;
+    for(let d=1; d<=nDays; d++){
+      let sum = 0; currentReport.rows.forEach(row=>{ const v = parseFloat(row.days[d]); if(!isNaN(v)) sum+=v; });
+      grand += sum; footDays += '<td>'+(sum||'')+'</td>';
+    }
+    let targetSum = 0, ctnsSum = 0, empSum = 0;
+    currentReport.rows.forEach(row=>{
+      const t = parseFloat(row.target); if(!isNaN(t)) targetSum += t;
+      const c = parseFloat(row.ctns); if(!isNaN(c)) ctnsSum += c;
+      const e = parseFloat(row.empVal); if(!isNaN(e)) empSum += e;
+    });
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+labelFor(currentReport.year,currentReport.month)+' Target</title>'
+      + '<style>@page{size:landscape;margin:8mm;} '
+      + '*{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }'
+      + 'body{font-family:Georgia,serif;margin:0;padding:12px;}'
+      + '.title{font-size:20px;font-weight:700;text-align:center;margin:0 0 10px;}'
+      + 'table{border-collapse:collapse;width:100%;font-size:9px;font-family:Arial,sans-serif;}'
+      + 'th,td{border:1px solid #333;padding:3px 4px;text-align:center;} th{background:#eee;font-weight:700;}'
+      + '.p-brand{text-align:left;white-space:nowrap;} .p-friday{background:#bfe3ae;} .p-sunday{background:#f3b2a8;}'
+      + 'tfoot td{font-weight:700;background:#f2f0e8;}</style></head><body>'
+      + '<div class="title">'+labelFor(currentReport.year,currentReport.month)+' Target — '+empLabel+'</div>'
+      + '<table><thead><tr><th>S.No</th><th>Target</th><th>Brand</th><th>Ctn\'s</th><th>'+empLabel+'</th>'+headDays+'<th>Total</th></tr></thead>'
+      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td><td>'+(targetSum||'')+'</td><td class="p-brand">Grand Total</td><td>'+(ctnsSum||'')+'</td><td>'+(empSum||'')+'</td>'+footDays+'<td>'+grand+'</td></tr></tfoot></table>'
+      + '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 250); };<\/script></body></html>';
+  }
+  function doPrint(){
+    if(!currentReport) return;
+    const blob = new Blob([buildPrintDocument()], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    const fb = $('printFallback');
+    if(!win){ fb.innerHTML = 'Your browser blocked the popup. <a href="'+url+'" target="_blank" rel="noopener">Click here to open the printable report ↗</a>'; }
+    else { fb.innerHTML = 'Opened in a new tab. If it didn\'t appear, <a href="'+url+'" target="_blank" rel="noopener">click here ↗</a>'; }
+  }
+
+  // ---------------- backup export ----------------
+  async function exportBackup(){
+    const full = [];
+    for(const item of reportsList){ const rep = await fetchReport(item.id); if(rep) full.push(rep); }
+    const data = { email: session.user.email, exportedAt: new Date().toISOString(), reports: full };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'production-ledger-backup-' + Date.now() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 5000);
+  }
+
+  // ---------------- init ----------------
+  async function initApp(){
+    await fetchReportsList();
+    populateReportSelect();
+    if(reportsList.length){ const last = reportsList[reportsList.length-1]; await selectReport(last.id); $('reportSelect').value = last.id; }
+    else { currentReport = null; renderTable(); $('subtitle').textContent = 'Create your first monthly report to begin'; }
+    if(appInitDone) return;
+    appInitDone = true;
+    $('reportSelect').addEventListener('change', (e)=> selectReport(e.target.value));
+    $('newReportBtn').addEventListener('click', openModal);
+    $('emptyNewBtn').addEventListener('click', openModal);
+    $('modalCancel').addEventListener('click', closeModal);
+    $('modalCreate').addEventListener('click', createReport);
+    $('modalBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); });
+    $('addRowBtn').addEventListener('click', addRow);
+    $('printBtn').addEventListener('click', doPrint);
+    $('deleteReportBtn').addEventListener('click', deleteReport);
+    $('exportBtn').addEventListener('click', exportBackup);
+  }
+
+  // ---------------- boot ----------------
+  (async function boot(){
+    if(!supabase){ showAuthView(); return; }
+    const { data } = await supabase.auth.getSession();
+    if(data && data.session){ session = data.session; showAppView(); } else { showAuthView(); }
+    supabase.auth.onAuthStateChange((event, sess)=>{
+      if(event === 'SIGNED_OUT'){ session = null; showAuthView(); }
+    });
+  })();
+})();
+</script>
+</body>
+</html>
