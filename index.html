@@ -46,6 +46,8 @@
   .auth-msg{font-size:12.5px;margin-top:10px;text-align:center;min-height:16px;}
   .auth-msg.error{color:var(--danger);}
   .auth-msg.ok{color:#2c6b3e;}
+  .mini-btn{display:inline-block;font-size:12.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;padding:6px 10px;cursor:pointer;margin:3px 4px 0 0;text-decoration:none;}
+  .mini-btn:hover{background:var(--accent);color:#fff;}
 
   #appView{display:none;}
   .topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
@@ -150,8 +152,8 @@
 <div id="authView">
   <div class="auth-card">
     <h1>Production Ledger</h1>
-    <p class="sub">Sign in to your private workspace</p>
-    <div class="tabs">
+    <p class="sub" id="authSub">Sign in to your private workspace</p>
+    <div class="tabs" id="authTabs">
       <button class="tab-btn active" id="tabLogin">Log In</button>
       <button class="tab-btn" id="tabRegister">Register</button>
     </div>
@@ -161,6 +163,8 @@
       <div class="field"><label>Password</label><input type="password" id="loginPassword" autocomplete="current-password" required></div>
       <button type="submit" class="auth-submit" id="loginSubmitBtn">Log In</button>
       <div class="auth-msg" id="loginMsg"></div>
+      <div id="loginExtraActions" style="display:none;margin-top:10px;"></div>
+      <p style="text-align:center;margin:14px 0 0;"><a href="#" id="forgotLink" style="font-size:12.5px;color:var(--ink-soft);">Forgot your password?</a></p>
     </form>
 
     <form class="auth-form" id="registerForm">
@@ -170,9 +174,27 @@
       <div class="field"><label>Confirm password</label><input type="password" id="regPassword2" autocomplete="new-password" required></div>
       <button type="submit" class="auth-submit" id="regSubmitBtn">Create Account</button>
       <div class="auth-msg" id="regMsg"></div>
+      <div id="regExtraActions" style="display:none;margin-top:10px;"></div>
+    </form>
+
+    <form class="auth-form" id="forgotForm">
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Enter your email and we'll send you a link to reset your password.</p>
+      <div class="field"><label>Email</label><input type="email" id="forgotEmail" autocomplete="username" required></div>
+      <button type="submit" class="auth-submit" id="forgotSubmitBtn">Send Reset Link</button>
+      <div class="auth-msg" id="forgotMsg"></div>
+      <p style="text-align:center;margin:14px 0 0;"><a href="#" id="backToLoginLink" style="font-size:12.5px;color:var(--ink-soft);">Back to log in</a></p>
+    </form>
+
+    <form class="auth-form" id="resetPasswordForm">
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Choose a new password for your account.</p>
+      <div class="field"><label>New password</label><input type="password" id="resetPassword" autocomplete="new-password" required></div>
+      <div class="field"><label>Confirm new password</label><input type="password" id="resetPassword2" autocomplete="new-password" required></div>
+      <button type="submit" class="auth-submit" id="resetSubmitBtn">Set New Password</button>
+      <div class="auth-msg" id="resetMsg"></div>
     </form>
   </div>
 </div>
+
 
 <div id="appView">
   <div class="wrap">
@@ -284,12 +306,27 @@
     initApp();
   }
 
-  $('tabLogin').addEventListener('click', ()=>{ $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active'); $('loginForm').classList.add('active'); $('registerForm').classList.remove('active'); });
-  $('tabRegister').addEventListener('click', ()=>{ $('tabRegister').classList.add('active'); $('tabLogin').classList.remove('active'); $('registerForm').classList.add('active'); $('loginForm').classList.remove('active'); });
+  function showAuthForm(which){
+    ['loginForm','registerForm','forgotForm','resetPasswordForm'].forEach(id=> $(id).classList.remove('active'));
+    $(which).classList.add('active');
+    $('authTabs').style.display = (which==='loginForm' || which==='registerForm') ? 'flex' : 'none';
+    $('tabLogin').classList.toggle('active', which==='loginForm');
+    $('tabRegister').classList.toggle('active', which==='registerForm');
+    $('authSub').textContent = which==='resetPasswordForm' ? 'Set a new password' : which==='forgotForm' ? 'Reset your password' : 'Sign in to your private workspace';
+  }
+
+  $('tabLogin').addEventListener('click', ()=> showAuthForm('loginForm'));
+  $('tabRegister').addEventListener('click', ()=> showAuthForm('registerForm'));
+  $('forgotLink').addEventListener('click', (e)=>{ e.preventDefault(); $('forgotEmail').value = $('loginEmail').value; $('forgotMsg').textContent=''; showAuthForm('forgotForm'); });
+  $('backToLoginLink').addEventListener('click', (e)=>{ e.preventDefault(); showAuthForm('loginForm'); });
+
+  function goToLoginWith(email){ showAuthForm('loginForm'); $('loginEmail').value = email; $('loginPassword').focus(); }
+  function goToForgotWith(email){ showAuthForm('forgotForm'); $('forgotEmail').value = email; $('forgotMsg').textContent=''; }
 
   $('registerForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const msg = $('regMsg'); msg.className='auth-msg'; msg.textContent='';
+    const extra = $('regExtraActions'); extra.style.display='none'; extra.innerHTML='';
     if(!supabase){ msg.className='auth-msg error'; msg.textContent='Database is not configured yet — see the setup notice above.'; return; }
     const btn = $('regSubmitBtn'); btn.disabled = true;
     try{
@@ -302,10 +339,25 @@
       if(pw !== pw2){ msg.className='auth-msg error'; msg.textContent='Passwords do not match.'; return; }
       const { data, error } = await supabase.auth.signUp({ email, password: pw, options: { data: { display_name: name } } });
       if(error){ msg.className='auth-msg error'; msg.textContent=error.message; return; }
+      // Supabase's documented way to detect an email that's already registered:
+      // identities comes back empty instead of an error (to avoid leaking which emails exist).
+      const alreadyRegistered = data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+      if(alreadyRegistered){
+        msg.className='auth-msg error';
+        msg.textContent = 'An account already exists for this email. Please log in — or reset your password if you forgot it.';
+        extra.style.display='block';
+        extra.innerHTML = '';
+        const loginBtn = document.createElement('a'); loginBtn.href='#'; loginBtn.className='mini-btn'; loginBtn.textContent='Log in';
+        loginBtn.addEventListener('click',(ev)=>{ ev.preventDefault(); goToLoginWith(email); });
+        const forgotBtn = document.createElement('a'); forgotBtn.href='#'; forgotBtn.className='mini-btn'; forgotBtn.textContent='Forgot password';
+        forgotBtn.addEventListener('click',(ev)=>{ ev.preventDefault(); goToForgotWith(email); });
+        extra.appendChild(loginBtn); extra.appendChild(forgotBtn);
+        return;
+      }
       if(!data.session){
         msg.className='auth-msg ok'; msg.textContent='Account created! Check your email to confirm it, then log in.';
         $('registerForm').reset();
-        setTimeout(()=>{ $('tabLogin').click(); $('loginEmail').value = email; }, 900);
+        setTimeout(()=>{ goToLoginWith(email); }, 900);
       } else {
         session = data.session; showAppView();
       }
@@ -315,6 +367,7 @@
   $('loginForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const msg = $('loginMsg'); msg.className='auth-msg'; msg.textContent='';
+    const extra = $('loginExtraActions'); extra.style.display='none'; extra.innerHTML='';
     if(!supabase){ msg.className='auth-msg error'; msg.textContent='Database is not configured yet — see the setup notice above.'; return; }
     const btn = $('loginSubmitBtn'); btn.disabled = true;
     try{
@@ -322,8 +375,57 @@
       const pw = $('loginPassword').value;
       if(!email || !pw){ msg.className='auth-msg error'; msg.textContent='Enter your email and password.'; return; }
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
-      if(error){ msg.className='auth-msg error'; msg.textContent=error.message; return; }
+      if(error){
+        msg.className='auth-msg error';
+        if(/email.*not.*confirmed/i.test(error.message)){
+          msg.textContent = 'This account\'s email hasn\'t been confirmed yet.';
+          extra.style.display='block';
+          const resendBtn = document.createElement('a'); resendBtn.href='#'; resendBtn.className='mini-btn'; resendBtn.textContent='Resend confirmation email';
+          resendBtn.addEventListener('click', async (ev)=>{
+            ev.preventDefault();
+            resendBtn.textContent = 'Sending…';
+            const { error: rErr } = await supabase.auth.resend({ type: 'signup', email });
+            if(rErr){ resendBtn.textContent = 'Resend confirmation email'; msg.className='auth-msg error'; msg.textContent = rErr.message; }
+            else { resendBtn.textContent = 'Sent! Check your inbox (and spam folder).'; }
+          });
+          extra.appendChild(resendBtn);
+        } else {
+          msg.textContent = error.message;
+        }
+        return;
+      }
       session = data.session; showAppView();
+    } finally { btn.disabled = false; }
+  });
+
+  $('forgotForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = $('forgotMsg'); msg.className='auth-msg'; msg.textContent='';
+    if(!supabase){ msg.className='auth-msg error'; msg.textContent='Database is not configured yet — see the setup notice above.'; return; }
+    const btn = $('forgotSubmitBtn'); btn.disabled = true;
+    try{
+      const email = $('forgotEmail').value.trim();
+      if(!email){ msg.className='auth-msg error'; msg.textContent='Enter your email.'; return; }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+      if(error){ msg.className='auth-msg error'; msg.textContent=error.message; return; }
+      msg.className='auth-msg ok'; msg.textContent='If an account exists for that email, a reset link has been sent. Check your inbox (and spam folder).';
+    } finally { btn.disabled = false; }
+  });
+
+  $('resetPasswordForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = $('resetMsg'); msg.className='auth-msg'; msg.textContent='';
+    const btn = $('resetSubmitBtn'); btn.disabled = true;
+    try{
+      const pw = $('resetPassword').value;
+      const pw2 = $('resetPassword2').value;
+      if(pw.length < 6){ msg.className='auth-msg error'; msg.textContent='Password must be at least 6 characters.'; return; }
+      if(pw !== pw2){ msg.className='auth-msg error'; msg.textContent='Passwords do not match.'; return; }
+      const { data, error } = await supabase.auth.updateUser({ password: pw });
+      if(error){ msg.className='auth-msg error'; msg.textContent=error.message; return; }
+      msg.className='auth-msg ok'; msg.textContent='Password updated! Signing you in…';
+      session = data.session || (await supabase.auth.getSession()).data.session;
+      setTimeout(()=>{ if(session) showAppView(); else showAuthForm('loginForm'); }, 800);
     } finally { btn.disabled = false; }
   });
 
@@ -331,8 +433,10 @@
     if(supabase) await supabase.auth.signOut();
     session = null;
     $('loginForm').reset(); $('loginMsg').textContent='';
+    showAuthForm('loginForm');
     showAuthView();
   });
+
 
   // ---------------- app state ----------------
   let reportsList = [];    // [{id, year, month}]
@@ -641,11 +745,22 @@
   // ---------------- boot ----------------
   (async function boot(){
     if(!supabase){ showAuthView(); return; }
+    let recoveryPending = false;
+    supabase.auth.onAuthStateChange((event, sess)=>{
+      if(event === 'PASSWORD_RECOVERY'){
+        recoveryPending = true;
+        session = sess;
+        showAuthView();
+        showAuthForm('resetPasswordForm');
+      } else if(event === 'SIGNED_OUT'){
+        session = null; showAuthView(); showAuthForm('loginForm');
+      }
+    });
+    // give the recovery-link auth event a brief moment to fire before deciding what to show
+    await new Promise(r=> setTimeout(r, 250));
+    if(recoveryPending) return;
     const { data } = await supabase.auth.getSession();
     if(data && data.session){ session = data.session; showAppView(); } else { showAuthView(); }
-    supabase.auth.onAuthStateChange((event, sess)=>{
-      if(event === 'SIGNED_OUT'){ session = null; showAuthView(); }
-    });
   })();
 })();
 </script>
