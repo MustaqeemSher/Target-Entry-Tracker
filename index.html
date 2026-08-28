@@ -74,30 +74,37 @@
   .empty-state h2{font-family:'Source Serif 4',serif;color:var(--ink);margin-bottom:6px;font-size:19px;}
   .empty-state .btn{margin-top:14px;}
 
-  .table-scroll{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;}
+  .table-scroll{overflow:auto;-webkit-overflow-scrolling:touch;max-height:68vh;}
   table.ledger{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;font-size:13px;}
-  table.ledger thead th{background:#efeadd;border-bottom:1px solid var(--line-strong);border-right:1px solid var(--line);padding:8px 6px;font-weight:600;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;text-align:center;white-space:nowrap;}
+  table.ledger thead th{position:sticky;top:0;background:#efeadd;border-bottom:1px solid var(--line-strong);border-right:1px solid var(--line);padding:8px 6px;font-weight:600;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;text-align:center;white-space:nowrap;z-index:5;}
   table.ledger th.day-friday{background:var(--friday-bg);color:var(--friday-fg);}
   table.ledger th.day-sunday{background:var(--sunday-bg);color:var(--sunday-fg);}
   table.ledger td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:4px;text-align:center;vertical-align:middle;}
   table.ledger tbody tr:nth-child(even) td{background:#fbfaf6;}
   table.ledger tbody tr:hover td{background:#f1efe5;}
-  th.col-actions,td.col-actions{min-width:38px;width:38px;background:#f7e9e7;}
+  th.col-actions,td.col-actions{min-width:38px;width:38px;background:#f7e9e7;position:sticky;left:0;z-index:3;}
+  thead th.col-actions{z-index:7;}
   th.col-sno,td.col-sno{min-width:38px;width:38px;}
   th.col-target,td.col-target{min-width:80px;}
-  th.col-brand,td.col-brand{min-width:150px;text-align:left;}
+  th.col-brand,td.col-brand{min-width:150px;text-align:left;position:sticky;left:38px;z-index:2;background:#fff;box-shadow:2px 0 4px -2px rgba(0,0,0,0.12);}
+  thead th.col-brand{z-index:7;background:#efeadd;}
+  th.col-price,td.col-price{min-width:90px;}
   th.col-ctns,td.col-ctns{min-width:70px;}
   th.col-emp,td.col-emp{min-width:120px;}
   th.col-emp input{font-weight:700;text-transform:none;letter-spacing:0;text-align:center;background:#fff;border:1px solid var(--line-strong);border-radius:5px;padding:5px;font-size:12px;width:100%;color:var(--ink);}
-  th.day-col,td.day-col{min-width:46px;width:46px;}
+  th.day-col,td.day-col{min-width:52px;width:52px;}
   th.col-total,td.col-total{min-width:80px;font-weight:700;}
+  th.col-amount,td.col-amount{min-width:100px;font-weight:700;}
 
-  td input{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13px;text-align:center;padding:6px 4px;border-radius:5px;color:var(--ink);}
+  td input{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13px;text-align:center;padding:6px 4px;border-radius:5px;color:var(--ink);min-width:100%;}
   td.col-brand input{text-align:left;}
   td.col-sno span{color:var(--ink-soft);font-weight:600;}
   td input:hover{border-color:var(--line);}
-  td input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px var(--accent-soft);}
+  td input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px var(--accent-soft);position:relative;z-index:8;}
+  tbody tr:nth-child(even) td.col-brand{background:#fbfaf6;}
+  tbody tr:hover td.col-brand{background:#f1efe5;}
   .total-val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
+  .amount-val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#8a5a1f;}
   .del-btn{border:none;background:#fff;color:var(--danger);cursor:pointer;font-size:16px;line-height:1;width:28px;height:28px;border-radius:6px;border:1px solid #e2b6ac;}
   .del-btn:hover{background:var(--danger);color:#fff;}
   tfoot td{border-top:2px solid var(--line-strong);background:var(--accent-soft) !important;font-weight:700;padding:8px 4px;}
@@ -106,6 +113,11 @@
   tfoot .col-total{font-family:'IBM Plex Mono',monospace;color:var(--accent);}
   .footer-actions{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:#faf9f4;flex-wrap:wrap;gap:8px;}
   .hint{font-size:12px;color:var(--ink-soft);}
+  .search-row{display:flex;align-items:center;gap:8px;padding:10px 12px 0;flex-wrap:wrap;}
+  .search-row input{flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:7px;font-family:inherit;font-size:13.5px;background:#fff;}
+  .search-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+  tr.row-hidden{display:none;}
+  tr.row-match td.col-brand{background:#fff6cf !important;}
   #printFallback{font-size:12.5px;margin-top:6px;}
   #printFallback a{color:var(--accent);font-weight:600;}
   .backup-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
@@ -221,7 +233,12 @@
       </div>
 
       <div id="tableHolder" style="display:none;">
-        <p class="hint" style="margin:10px 12px 0;">The red ✕ button on the left of each row deletes that row (with a confirmation).</p>
+        <div class="search-row">
+          <input type="text" id="brandSearch" placeholder="🔍 Search brand…" autocomplete="off">
+          <button class="btn btn-ghost" id="clearSearchBtn" style="display:none;">✕ Clear</button>
+          <span class="hint" id="searchCount" style="margin-left:auto;"></span>
+        </div>
+        <p class="hint" style="margin:6px 12px 0;">The red ✕ on the left deletes a row. The header row and Brand column stay pinned as you scroll.</p>
         <div class="table-scroll">
           <table class="ledger" id="ledgerTable">
             <thead><tr id="headRow"></tr></thead>
@@ -240,7 +257,7 @@
     <div class="backup-row">
       <button class="btn btn-ghost" id="exportBtn">⬇ Download backup (.json)</button>
     </div>
-    <p class="hint" style="margin-top:10px;">Every change is saved straight to your Supabase database — a real, permanent database.</p>
+    <p class="hint" style="margin-top:10px;">Every change is saved straight to your Supabase database — a real, permanent database, not browser storage — so it stays intact for as long as you keep the project, across any device or browser.</p>
   </div>
 </div>
 
@@ -359,7 +376,14 @@
         $('registerForm').reset();
         setTimeout(()=>{ goToLoginWith(email); }, 900);
       } else {
-        session = data.session; showAppView();
+        // Email confirmation is off in Supabase, so the account is active immediately.
+        // Sign back out and send them to the log-in form, as requested, rather than
+        // dropping them straight into the app.
+        await supabase.auth.signOut();
+        $('registerForm').reset();
+        goToLoginWith(email);
+        $('loginMsg').className = 'auth-msg ok';
+        $('loginMsg').textContent = 'Account created! Log in below to get started.';
       }
     } finally { btn.disabled = false; }
   });
@@ -497,6 +521,14 @@
   }
 
   function rowTotal(row){ let sum = 0; for(const k in row.days){ const v = parseFloat(row.days[k]); if(!isNaN(v)) sum += v; } return sum; }
+  function rowAmount(row){ const price = parseFloat(row.tradePrice); if(isNaN(price)) return 0; return price * rowTotal(row); }
+
+  // Grows an input's width to fit whatever the employee types, so numbers/text
+  // never get clipped inside a small cell.
+  function autosizeInput(inp, minCh){
+    const len = (inp.value !== undefined && inp.value !== null) ? String(inp.value).length : 0;
+    inp.style.width = len === 0 ? '' : Math.max(minCh, len + 2) + 'ch';
+  }
 
   function renderTable(){
     const holder = $('tableHolder'), empty = $('emptyState');
@@ -516,7 +548,7 @@
     const nDays = daysInMonth(currentReport.year, currentReport.month);
     const headRow = $('headRow'); headRow.innerHTML = '';
     const actTh0 = document.createElement('th'); actTh0.className = 'col-actions'; headRow.appendChild(actTh0);
-    [['col-sno','S.No'],['col-target','Target'],['col-brand','Brand'],['col-ctns',"Ctn's"]].forEach(c=>{
+    [['col-sno','S.No'],['col-target','Target'],['col-brand','Brand'],['col-price','Trade Price'],['col-ctns',"Ctn's"]].forEach(c=>{
       const th = document.createElement('th'); th.className = c[0]; th.textContent = c[1]; headRow.appendChild(th);
     });
     const empTh = document.createElement('th'); empTh.className = 'col-emp';
@@ -531,11 +563,14 @@
       if(wd===5) th.className += ' day-friday'; if(wd===0) th.className += ' day-sunday';
       th.textContent = d; headRow.appendChild(th);
     }
-    const totalTh = document.createElement('th'); totalTh.className = 'col-total'; totalTh.textContent = 'Total'; headRow.appendChild(totalTh);
+    const totalTh = document.createElement('th'); totalTh.className = 'col-total'; totalTh.textContent = 'TOTAL PKT'; headRow.appendChild(totalTh);
+    const amountTh = document.createElement('th'); amountTh.className = 'col-amount'; amountTh.textContent = 'AMOUNT'; headRow.appendChild(amountTh);
 
     const body = $('bodyRows'); body.innerHTML = '';
     currentReport.rows.forEach((row, idx)=>{
       const tr = document.createElement('tr');
+      tr.dataset.brand = (row.brand || '').toLowerCase();
+
       const actTd = document.createElement('td'); actTd.className = 'col-actions';
       const delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.innerHTML = '✕'; delBtn.title = 'Delete this row';
       delBtn.addEventListener('click', ()=>{
@@ -546,51 +581,88 @@
       actTd.appendChild(delBtn); tr.appendChild(actTd);
 
       const snoTd = document.createElement('td'); snoTd.className = 'col-sno'; snoTd.innerHTML = '<span>'+(idx+1)+'</span>'; tr.appendChild(snoTd);
-      tr.appendChild(makeInputCell('col-target', row.target, 'number', (val)=>{ row.target = val; queueSave(); }));
-      tr.appendChild(makeInputCell('col-brand', row.brand, 'text', (val)=>{ row.brand = val; queueSave(); }, 'Brand name'));
-      tr.appendChild(makeInputCell('col-ctns', row.ctns, 'number', (val)=>{ row.ctns = val; queueSave(); }));
-      tr.appendChild(makeInputCell('col-emp', row.empVal, 'number', (val)=>{ row.empVal = val; queueSave(); }));
+      tr.appendChild(makeInputCell('col-target', row.target, 'number', (val)=>{ row.target = val; queueSave(); }, null, 4));
+      tr.appendChild(makeInputCell('col-brand', row.brand, 'text', (val)=>{ row.brand = val; tr.dataset.brand = val.toLowerCase(); queueSave(); }, 'Brand name', 10));
+      tr.appendChild(makeInputCell('col-price', row.tradePrice, 'number', (val)=>{ row.tradePrice = val; amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,''); queueSave(); updateFooter(); }, null, 5));
+      tr.appendChild(makeInputCell('col-ctns', row.ctns, 'number', (val)=>{ row.ctns = val; queueSave(); }, null, 4));
+      tr.appendChild(makeInputCell('col-emp', row.empVal, 'number', (val)=>{ row.empVal = val; queueSave(); }, null, 5));
 
       for(let d=1; d<=nDays; d++){
         const td = document.createElement('td'); td.className = 'day-col';
         const inp = document.createElement('input'); inp.type = 'number'; inp.inputMode='decimal';
         inp.value = row.days[d] !== undefined && row.days[d] !== null ? row.days[d] : '';
-        inp.addEventListener('input', ()=>{ row.days[d] = inp.value === '' ? null : inp.value; totalSpan.textContent = rowTotal(row); queueSave(); updateFooter(); });
+        autosizeInput(inp, 4);
+        inp.addEventListener('input', ()=>{
+          row.days[d] = inp.value === '' ? null : inp.value;
+          autosizeInput(inp, 4);
+          totalSpan.textContent = rowTotal(row);
+          amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,'');
+          queueSave(); updateFooter();
+        });
         td.appendChild(inp); tr.appendChild(td);
       }
 
       const totalTd = document.createElement('td'); totalTd.className = 'col-total';
       const totalSpan = document.createElement('span'); totalSpan.className = 'total-val'; totalSpan.textContent = rowTotal(row);
       totalTd.appendChild(totalSpan); tr.appendChild(totalTd);
+
+      const amountTd = document.createElement('td'); amountTd.className = 'col-amount';
+      const amountSpan = document.createElement('span'); amountSpan.className = 'amount-val'; amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,'');
+      amountTd.appendChild(amountSpan); tr.appendChild(amountTd);
+
       body.appendChild(tr);
     });
     updateFooter();
+    applyBrandSearch();
   }
 
-  function makeInputCell(cls, value, type, onChange, placeholder){
+  function makeInputCell(cls, value, type, onChange, placeholder, minCh){
     const td = document.createElement('td'); td.className = cls;
     const inp = document.createElement('input'); inp.type = type;
     if(type==='number') inp.inputMode = 'decimal';
     if(placeholder) inp.placeholder = placeholder;
     inp.value = (value===undefined || value===null) ? '' : value;
-    inp.addEventListener('input', ()=> onChange(inp.value===''?'':inp.value));
+    autosizeInput(inp, minCh || 3);
+    inp.addEventListener('input', ()=>{ autosizeInput(inp, minCh || 3); onChange(inp.value===''?'':inp.value); });
     td.appendChild(inp); return td;
+  }
+
+  // ---------------- brand search ----------------
+  function applyBrandSearch(){
+    const q = ($('brandSearch').value || '').trim().toLowerCase();
+    const rows = $('bodyRows').querySelectorAll('tr');
+    let matches = 0;
+    rows.forEach(tr=>{
+      const isMatch = q !== '' && tr.dataset.brand && tr.dataset.brand.indexOf(q) !== -1;
+      tr.classList.toggle('row-hidden', q !== '' && !isMatch);
+      tr.classList.toggle('row-match', isMatch);
+      if(isMatch) matches++;
+    });
+    $('clearSearchBtn').style.display = q ? 'inline-flex' : 'none';
+    if(q === ''){ $('searchCount').textContent = ''; }
+    else { $('searchCount').textContent = matches + ' match' + (matches===1?'':'es'); }
+    if(q !== '' && matches > 0){
+      const firstMatch = $('bodyRows').querySelector('tr.row-match');
+      if(firstMatch) firstMatch.scrollIntoView({block:'nearest', behavior:'smooth'});
+    }
   }
 
   function updateFooter(){
     if(!currentReport) return;
     const nDays = daysInMonth(currentReport.year, currentReport.month);
     const foot = $('footRow'); foot.innerHTML = '';
-    let targetSum = 0, ctnsSum = 0, empSum = 0;
+    let targetSum = 0, ctnsSum = 0, empSum = 0, amountSum = 0;
     currentReport.rows.forEach(row=>{
       const t = parseFloat(row.target); if(!isNaN(t)) targetSum += t;
       const c = parseFloat(row.ctns); if(!isNaN(c)) ctnsSum += c;
       const e = parseFloat(row.empVal); if(!isNaN(e)) empSum += e;
+      amountSum += rowAmount(row);
     });
     const actBlank = document.createElement('td'); actBlank.className='col-actions'; foot.appendChild(actBlank);
     const snoBlank = document.createElement('td'); snoBlank.className='col-sno'; foot.appendChild(snoBlank);
     const targetTd = document.createElement('td'); targetTd.className='col-target'; targetTd.textContent = targetSum || ''; foot.appendChild(targetTd);
     const labelTd = document.createElement('td'); labelTd.className = 'col-brand'; labelTd.textContent = 'Grand Total'; foot.appendChild(labelTd);
+    const priceBlank = document.createElement('td'); priceBlank.className='col-price'; foot.appendChild(priceBlank);
     const ctnsTd = document.createElement('td'); ctnsTd.className='col-ctns'; ctnsTd.textContent = ctnsSum || ''; foot.appendChild(ctnsTd);
     const empTd = document.createElement('td'); empTd.className='col-emp'; empTd.textContent = empSum || ''; foot.appendChild(empTd);
     let grand = 0;
@@ -600,6 +672,7 @@
       const td = document.createElement('td'); td.className = 'day-col'; td.textContent = sum || ''; foot.appendChild(td);
     }
     const gtd = document.createElement('td'); gtd.className = 'col-total'; gtd.textContent = grand; foot.appendChild(gtd);
+    const atd = document.createElement('td'); atd.className = 'col-amount'; atd.textContent = amountSum ? amountSum.toFixed(2).replace(/\.00$/,'') : ''; foot.appendChild(atd);
   }
 
   async function selectReport(id){
@@ -649,7 +722,7 @@
   }
 
   function addRow(){
-    currentReport.rows.push({ id: uid(), target:'', brand:'', ctns:'', empVal:'', days:{} });
+    currentReport.rows.push({ id: uid(), target:'', brand:'', tradePrice:'', ctns:'', empVal:'', days:{} });
     queueSave(); renderTable();
   }
 
@@ -660,14 +733,15 @@
     const empLabel = escapeHtml(currentReport.employee_name || 'Employee');
     let rows = '';
     currentReport.rows.forEach((row, idx)=>{
-      rows += '<tr><td>'+(idx+1)+'</td><td>'+escapeHtml(row.target||'')+'</td><td class="p-brand">'+escapeHtml(row.brand||'')+'</td><td>'+escapeHtml(row.ctns||'')+'</td><td>'+escapeHtml(row.empVal||'')+'</td>';
+      rows += '<tr><td>'+(idx+1)+'</td><td>'+escapeHtml(row.target||'')+'</td><td class="p-brand">'+escapeHtml(row.brand||'')+'</td><td>'+escapeHtml(row.tradePrice||'')+'</td><td>'+escapeHtml(row.ctns||'')+'</td><td>'+escapeHtml(row.empVal||'')+'</td>';
       for(let d=1; d<=nDays; d++){
         const wd = weekday(currentReport.year, currentReport.month, d);
         const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
         const v = row.days[d];
         rows += '<td class="'+cls+'">'+(v===undefined||v===null||v===''?'':escapeHtml(v))+'</td>';
       }
-      rows += '<td>'+rowTotal(row)+'</td></tr>';
+      const amt = rowAmount(row);
+      rows += '<td>'+rowTotal(row)+'</td><td>'+(amt?amt.toFixed(2).replace(/\.00$/,''):'')+'</td></tr>';
     });
     let headDays = '';
     for(let d=1; d<=nDays; d++){
@@ -680,11 +754,12 @@
       let sum = 0; currentReport.rows.forEach(row=>{ const v = parseFloat(row.days[d]); if(!isNaN(v)) sum+=v; });
       grand += sum; footDays += '<td>'+(sum||'')+'</td>';
     }
-    let targetSum = 0, ctnsSum = 0, empSum = 0;
+    let targetSum = 0, ctnsSum = 0, empSum = 0, amountSum = 0;
     currentReport.rows.forEach(row=>{
       const t = parseFloat(row.target); if(!isNaN(t)) targetSum += t;
       const c = parseFloat(row.ctns); if(!isNaN(c)) ctnsSum += c;
       const e = parseFloat(row.empVal); if(!isNaN(e)) empSum += e;
+      amountSum += rowAmount(row);
     });
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+labelFor(currentReport.year,currentReport.month)+' Target</title>'
       + '<style>@page{size:landscape;margin:8mm;} '
@@ -696,8 +771,8 @@
       + '.p-brand{text-align:left;white-space:nowrap;} .p-friday{background:#bfe3ae;} .p-sunday{background:#f3b2a8;}'
       + 'tfoot td{font-weight:700;background:#f2f0e8;}</style></head><body>'
       + '<div class="title">'+labelFor(currentReport.year,currentReport.month)+' Target — '+empLabel+'</div>'
-      + '<table><thead><tr><th>S.No</th><th>Target</th><th>Brand</th><th>Ctn\'s</th><th>'+empLabel+'</th>'+headDays+'<th>Total</th></tr></thead>'
-      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td><td>'+(targetSum||'')+'</td><td class="p-brand">Grand Total</td><td>'+(ctnsSum||'')+'</td><td>'+(empSum||'')+'</td>'+footDays+'<td>'+grand+'</td></tr></tfoot></table>'
+      + '<table><thead><tr><th>S.No</th><th>Target</th><th>Brand</th><th>Trade Price</th><th>Ctn\'s</th><th>'+empLabel+'</th>'+headDays+'<th>TOTAL PKT</th><th>AMOUNT</th></tr></thead>'
+      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td><td>'+(targetSum||'')+'</td><td class="p-brand">Grand Total</td><td></td><td>'+(ctnsSum||'')+'</td><td>'+(empSum||'')+'</td>'+footDays+'<td>'+grand+'</td><td>'+(amountSum?amountSum.toFixed(2).replace(/\.00$/,''):'')+'</td></tr></tfoot></table>'
       + '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 250); };<\/script></body></html>';
   }
   function doPrint(){
@@ -740,6 +815,8 @@
     $('printBtn').addEventListener('click', doPrint);
     $('deleteReportBtn').addEventListener('click', deleteReport);
     $('exportBtn').addEventListener('click', exportBackup);
+    $('brandSearch').addEventListener('input', applyBrandSearch);
+    $('clearSearchBtn').addEventListener('click', ()=>{ $('brandSearch').value=''; applyBrandSearch(); $('brandSearch').focus(); });
   }
 
   // ---------------- boot ----------------
