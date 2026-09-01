@@ -74,7 +74,7 @@
   .empty-state h2{font-family:'Source Serif 4',serif;color:var(--ink);margin-bottom:6px;font-size:19px;}
   .empty-state .btn{margin-top:14px;}
 
-  .table-scroll{overflow:auto;-webkit-overflow-scrolling:touch;max-height:68vh;}
+  .table-scroll{overflow:auto;-webkit-overflow-scrolling:touch;height:68vh;}
   table.ledger{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;font-size:13px;}
   table.ledger thead th{position:sticky;top:0;background:#efeadd;border-bottom:1px solid var(--line-strong);border-right:1px solid var(--line);padding:8px 6px;font-weight:600;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;text-align:center;white-space:nowrap;z-index:5;}
   table.ledger th.day-friday{background:var(--friday-bg);color:var(--friday-fg);}
@@ -84,7 +84,7 @@
   table.ledger tbody tr:hover td{background:#f1efe5;}
   th.col-actions,td.col-actions{min-width:38px;width:38px;background:#f7e9e7;position:sticky;left:0;z-index:3;}
   thead th.col-actions{z-index:7;}
-  th.col-sno,td.col-sno{min-width:38px;width:38px;}
+  th.col-sno,td.col-sno{min-width:44px;width:44px;}
   th.col-target,td.col-target{min-width:80px;}
   th.col-brand,td.col-brand{min-width:150px;text-align:left;position:sticky;left:38px;z-index:2;background:#fff;box-shadow:2px 0 4px -2px rgba(0,0,0,0.12);}
   thead th.col-brand{z-index:7;background:#efeadd;}
@@ -99,6 +99,11 @@
   td input{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13px;text-align:center;padding:6px 4px;border-radius:5px;color:var(--ink);min-width:100%;}
   td.col-brand input{text-align:left;}
   td.col-sno span{color:var(--ink-soft);font-weight:600;}
+  .drag-handle{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:grab;user-select:none;touch-action:none;padding:4px 2px;border-radius:5px;}
+  .drag-handle:active{cursor:grabbing;background:var(--accent-soft);}
+  .drag-handle i{font-style:normal;font-size:11px;color:var(--ink-soft);line-height:1;}
+  tr.row-dragging{opacity:0.35;}
+  tr.row-drop-placeholder td{height:38px;background:repeating-linear-gradient(45deg,var(--accent-soft),var(--accent-soft) 6px,#fff 6px,#fff 12px)!important;border:2px dashed var(--accent)!important;padding:0;}
   td input:hover{border-color:var(--line);}
   td input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px var(--accent-soft);position:relative;z-index:8;}
   tbody tr:nth-child(even) td.col-brand{background:#fbfaf6;}
@@ -548,14 +553,17 @@
     const nDays = daysInMonth(currentReport.year, currentReport.month);
     const headRow = $('headRow'); headRow.innerHTML = '';
     const actTh0 = document.createElement('th'); actTh0.className = 'col-actions'; headRow.appendChild(actTh0);
-    [['col-sno','S.No'],['col-target','Target'],['col-brand','Brand'],['col-price','Trade Price'],['col-ctns',"Ctn's"]].forEach(c=>{
-      const th = document.createElement('th'); th.className = c[0]; th.textContent = c[1]; headRow.appendChild(th);
-    });
+    const snoTh = document.createElement('th'); snoTh.className = 'col-sno'; snoTh.textContent = 'S.No'; headRow.appendChild(snoTh);
+
     const empTh = document.createElement('th'); empTh.className = 'col-emp';
     const empInput = document.createElement('input');
     empInput.type = 'text'; empInput.value = currentReport.employee_name || ''; empInput.placeholder = 'Employee name';
     empInput.addEventListener('input', ()=>{ currentReport.employee_name = empInput.value; queueSave(); });
     empTh.appendChild(empInput); headRow.appendChild(empTh);
+
+    [['col-brand','Brand'],['col-price','Trade Price'],['col-ctns',"Ctn's"],['col-target','Target Amount']].forEach(c=>{
+      const th = document.createElement('th'); th.className = c[0]; th.textContent = c[1]; headRow.appendChild(th);
+    });
 
     for(let d=1; d<=nDays; d++){
       const th = document.createElement('th'); th.className = 'day-col';
@@ -570,6 +578,7 @@
     currentReport.rows.forEach((row, idx)=>{
       const tr = document.createElement('tr');
       tr.dataset.brand = (row.brand || '').toLowerCase();
+      tr.dataset.rowId = row.id;
 
       const actTd = document.createElement('td'); actTd.className = 'col-actions';
       const delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.innerHTML = '✕'; delBtn.title = 'Delete this row';
@@ -580,12 +589,16 @@
       });
       actTd.appendChild(delBtn); tr.appendChild(actTd);
 
-      const snoTd = document.createElement('td'); snoTd.className = 'col-sno'; snoTd.innerHTML = '<span>'+(idx+1)+'</span>'; tr.appendChild(snoTd);
-      tr.appendChild(makeInputCell('col-target', row.target, 'number', (val)=>{ row.target = val; queueSave(); }, null, 4));
+      const snoTd = document.createElement('td'); snoTd.className = 'col-sno';
+      const snoSpan = document.createElement('span'); snoSpan.className = 'drag-handle'; snoSpan.innerHTML = (idx+1) + '<i>⠿</i>'; snoSpan.title = 'Press and hold to move this row';
+      snoTd.appendChild(snoSpan); tr.appendChild(snoTd);
+      attachRowDrag(snoSpan, tr);
+
+      tr.appendChild(makeInputCell('col-emp', row.empVal, 'number', (val)=>{ row.empVal = val; queueSave(); }, null, 5));
       tr.appendChild(makeInputCell('col-brand', row.brand, 'text', (val)=>{ row.brand = val; tr.dataset.brand = val.toLowerCase(); queueSave(); }, 'Brand name', 10));
       tr.appendChild(makeInputCell('col-price', row.tradePrice, 'number', (val)=>{ row.tradePrice = val; amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,''); queueSave(); updateFooter(); }, null, 5));
       tr.appendChild(makeInputCell('col-ctns', row.ctns, 'number', (val)=>{ row.ctns = val; queueSave(); }, null, 4));
-      tr.appendChild(makeInputCell('col-emp', row.empVal, 'number', (val)=>{ row.empVal = val; queueSave(); }, null, 5));
+      tr.appendChild(makeInputCell('col-target', row.target, 'number', (val)=>{ row.target = val; queueSave(); }, null, 4));
 
       for(let d=1; d<=nDays; d++){
         const td = document.createElement('td'); td.className = 'day-col';
@@ -627,6 +640,88 @@
     td.appendChild(inp); return td;
   }
 
+  // ---------------- row reordering: press and hold the S.No handle, then drag ----------------
+  // Move a row anywhere — top, bottom, or between any two other rows.
+  let dragState = null;
+  function attachRowDrag(handleEl, tr){
+    let pressTimer = null;
+    let startY = 0, startX = 0, armed = false;
+
+    function cancelPress(){ clearTimeout(pressTimer); pressTimer = null; }
+
+    function onPointerDown(e){
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      startY = e.clientY; startX = e.clientX; armed = false;
+      cancelPress();
+      pressTimer = setTimeout(()=> startDrag(e), 450);
+      handleEl.addEventListener('pointermove', onPreMove);
+      handleEl.addEventListener('pointerup', onPreUp);
+      handleEl.addEventListener('pointercancel', onPreUp);
+    }
+    function onPreMove(e){
+      // cancel the long-press if the finger/mouse wanders before the hold completes
+      if(Math.abs(e.clientY-startY) > 10 || Math.abs(e.clientX-startX) > 10){ cancelPress(); }
+    }
+    function onPreUp(){
+      cancelPress();
+      handleEl.removeEventListener('pointermove', onPreMove);
+      handleEl.removeEventListener('pointerup', onPreUp);
+      handleEl.removeEventListener('pointercancel', onPreUp);
+    }
+
+    function startDrag(e){
+      armed = true;
+      tr.classList.add('row-dragging');
+      if(navigator.vibrate) try{ navigator.vibrate(15); }catch(err){}
+      const body = $('bodyRows');
+      let placeholder = document.createElement('tr');
+      placeholder.className = 'row-drop-placeholder';
+      const placeholderTd = document.createElement('td');
+      placeholderTd.colSpan = tr.children.length;
+      placeholder.appendChild(placeholderTd);
+      tr.parentNode.insertBefore(placeholder, tr.nextSibling);
+      dragState = { tr, placeholder, body };
+
+      function onMove(ev){
+        const y = ev.clientY;
+        const rows = Array.from(body.querySelectorAll('tr')).filter(r=> r!==tr && r!==placeholder);
+        let target = null;
+        for(const r of rows){
+          const rect = r.getBoundingClientRect();
+          if(y < rect.top + rect.height/2){ target = r; break; }
+        }
+        if(target){ body.insertBefore(placeholder, target); }
+        else { body.appendChild(placeholder); }
+        // auto-scroll the pane when dragging near its top/bottom edge
+        const scrollBox = $('ledgerTable').closest('.table-scroll');
+        if(scrollBox){
+          const boxRect = scrollBox.getBoundingClientRect();
+          if(y < boxRect.top + 40) scrollBox.scrollTop -= 12;
+          else if(y > boxRect.bottom - 40) scrollBox.scrollTop += 12;
+        }
+      }
+      function onUp(){
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        document.removeEventListener('pointercancel', onUp);
+        tr.classList.remove('row-dragging');
+        placeholder.parentNode.insertBefore(tr, placeholder);
+        placeholder.remove();
+        // commit the new visual order back into the data model
+        const newOrderIds = Array.from(body.querySelectorAll('tr')).map(r=> r.dataset.rowId);
+        currentReport.rows.sort((a,b)=> newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+        dragState = null;
+        queueSave();
+        renderTable();
+      }
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    }
+
+    handleEl.addEventListener('pointerdown', onPointerDown);
+  }
+
   // ---------------- brand search ----------------
   function applyBrandSearch(){
     const q = ($('brandSearch').value || '').trim().toLowerCase();
@@ -660,11 +755,11 @@
     });
     const actBlank = document.createElement('td'); actBlank.className='col-actions'; foot.appendChild(actBlank);
     const snoBlank = document.createElement('td'); snoBlank.className='col-sno'; foot.appendChild(snoBlank);
-    const targetTd = document.createElement('td'); targetTd.className='col-target'; targetTd.textContent = targetSum || ''; foot.appendChild(targetTd);
+    const empTd = document.createElement('td'); empTd.className='col-emp'; empTd.textContent = empSum || ''; foot.appendChild(empTd);
     const labelTd = document.createElement('td'); labelTd.className = 'col-brand'; labelTd.textContent = 'Grand Total'; foot.appendChild(labelTd);
     const priceBlank = document.createElement('td'); priceBlank.className='col-price'; foot.appendChild(priceBlank);
     const ctnsTd = document.createElement('td'); ctnsTd.className='col-ctns'; ctnsTd.textContent = ctnsSum || ''; foot.appendChild(ctnsTd);
-    const empTd = document.createElement('td'); empTd.className='col-emp'; empTd.textContent = empSum || ''; foot.appendChild(empTd);
+    const targetTd = document.createElement('td'); targetTd.className='col-target'; targetTd.textContent = targetSum || ''; foot.appendChild(targetTd);
     let grand = 0;
     for(let d=1; d<=nDays; d++){
       let sum = 0; currentReport.rows.forEach(row=>{ const v = parseFloat(row.days[d]); if(!isNaN(v)) sum += v; });
@@ -730,10 +825,13 @@
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function buildPrintDocument(){
     const nDays = daysInMonth(currentReport.year, currentReport.month);
-    const empLabel = escapeHtml(currentReport.employee_name || 'Employee');
+    // Title always uses the name from registration; the column header can be a custom label the employee typed.
+    const registeredName = (session.user.user_metadata && session.user.user_metadata.display_name) || session.user.email;
+    const printTitleName = escapeHtml(registeredName);
+    const colLabel = escapeHtml(currentReport.employee_name || registeredName);
     let rows = '';
     currentReport.rows.forEach((row, idx)=>{
-      rows += '<tr><td>'+(idx+1)+'</td><td>'+escapeHtml(row.target||'')+'</td><td class="p-brand">'+escapeHtml(row.brand||'')+'</td><td>'+escapeHtml(row.tradePrice||'')+'</td><td>'+escapeHtml(row.ctns||'')+'</td><td>'+escapeHtml(row.empVal||'')+'</td>';
+      rows += '<tr><td>'+(idx+1)+'</td><td>'+escapeHtml(row.empVal||'')+'</td><td class="p-brand">'+escapeHtml(row.brand||'')+'</td><td>'+escapeHtml(row.tradePrice||'')+'</td><td>'+escapeHtml(row.ctns||'')+'</td><td>'+escapeHtml(row.target||'')+'</td>';
       for(let d=1; d<=nDays; d++){
         const wd = weekday(currentReport.year, currentReport.month, d);
         const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
@@ -770,9 +868,9 @@
       + 'th,td{border:1px solid #333;padding:3px 4px;text-align:center;} th{background:#eee;font-weight:700;}'
       + '.p-brand{text-align:left;white-space:nowrap;} .p-friday{background:#bfe3ae;} .p-sunday{background:#f3b2a8;}'
       + 'tfoot td{font-weight:700;background:#f2f0e8;}</style></head><body>'
-      + '<div class="title">'+labelFor(currentReport.year,currentReport.month)+' Target — '+empLabel+'</div>'
-      + '<table><thead><tr><th>S.No</th><th>Target</th><th>Brand</th><th>Trade Price</th><th>Ctn\'s</th><th>'+empLabel+'</th>'+headDays+'<th>TOTAL PKT</th><th>AMOUNT</th></tr></thead>'
-      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td><td>'+(targetSum||'')+'</td><td class="p-brand">Grand Total</td><td></td><td>'+(ctnsSum||'')+'</td><td>'+(empSum||'')+'</td>'+footDays+'<td>'+grand+'</td><td>'+(amountSum?amountSum.toFixed(2).replace(/\.00$/,''):'')+'</td></tr></tfoot></table>'
+      + '<div class="title">'+labelFor(currentReport.year,currentReport.month)+' Target — '+printTitleName+'</div>'
+      + '<table><thead><tr><th>S.No</th><th>'+colLabel+'</th><th>Brand</th><th>Trade Price</th><th>Ctn\'s</th><th>Target Amount</th>'+headDays+'<th>TOTAL PKT</th><th>AMOUNT</th></tr></thead>'
+      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td><td>'+(empSum||'')+'</td><td class="p-brand">Grand Total</td><td></td><td>'+(ctnsSum||'')+'</td><td>'+(targetSum||'')+'</td>'+footDays+'<td>'+grand+'</td><td>'+(amountSum?amountSum.toFixed(2).replace(/\.00$/,''):'')+'</td></tr></tfoot></table>'
       + '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 250); };<\/script></body></html>';
   }
   function doPrint(){
