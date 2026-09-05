@@ -85,20 +85,22 @@
   th.col-actions,td.col-actions{min-width:38px;width:38px;background:#f7e9e7;position:sticky;left:0;z-index:3;}
   thead th.col-actions{z-index:7;}
   th.col-sno,td.col-sno{min-width:44px;width:44px;}
-  th.col-target,td.col-target{min-width:80px;}
-  th.col-brand,td.col-brand{min-width:150px;text-align:left;position:sticky;left:38px;z-index:2;background:#fff;box-shadow:2px 0 4px -2px rgba(0,0,0,0.12);}
-  thead th.col-brand{z-index:7;background:#efeadd;}
-  th.col-price,td.col-price{min-width:90px;}
-  th.col-ctns,td.col-ctns{min-width:70px;}
-  th.col-emp,td.col-emp{min-width:120px;}
-  th.col-emp input{font-weight:700;text-transform:none;letter-spacing:0;text-align:center;background:#fff;border:1px solid var(--line-strong);border-radius:5px;padding:5px;font-size:12px;width:100%;color:var(--ink);}
+  th.col-dyn,td.col-dyn{min-width:120px;}
+  th.col-dyn.col-pinned,td.col-dyn.col-pinned{position:sticky;left:38px;z-index:2;background:#fff;box-shadow:2px 0 4px -2px rgba(0,0,0,0.12);text-align:left;}
+  thead th.col-dyn.col-pinned{z-index:7;background:#efeadd;}
   th.day-col,td.day-col{min-width:52px;width:52px;}
-  th.col-total,td.col-total{min-width:80px;font-weight:700;}
-  th.col-amount,td.col-amount{min-width:100px;font-weight:700;}
 
   td input{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13px;text-align:center;padding:6px 4px;border-radius:5px;color:var(--ink);min-width:100%;}
-  td.col-brand input{text-align:left;}
+  td.col-pinned input{text-align:left;}
   td.col-sno span{color:var(--ink-soft);font-weight:600;}
+  .col-head-wrap{display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:nowrap;}
+  .col-drag-handle{cursor:grab;font-size:12px;color:var(--ink-soft);padding:3px;touch-action:none;user-select:none;border-radius:4px;flex-shrink:0;}
+  .col-drag-handle:active{cursor:grabbing;background:var(--accent-soft);}
+  .col-label-input{width:78px;text-align:center;font-weight:700;text-transform:none;letter-spacing:0;background:#fff;border:1px solid var(--line-strong);border-radius:5px;padding:4px 3px;font-size:11.5px;color:var(--ink);}
+  .col-label-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+  .col-del-btn{border:none;background:none;color:var(--danger);cursor:pointer;font-size:12px;padding:2px;flex-shrink:0;}
+  th.col-dragging{opacity:.35;}
+  th.col-drop-placeholder{background:repeating-linear-gradient(45deg,var(--accent-soft),var(--accent-soft) 6px,#fff 6px,#fff 12px)!important;border:2px dashed var(--accent)!important;min-width:60px;width:60px;}
   .drag-handle{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:grab;user-select:none;touch-action:none;padding:4px 2px;border-radius:5px;}
   .drag-handle:active{cursor:grabbing;background:var(--accent-soft);}
   .drag-handle i{font-style:normal;font-size:11px;color:var(--ink-soft);line-height:1;}
@@ -106,23 +108,22 @@
   tr.row-drop-placeholder td{height:38px;background:repeating-linear-gradient(45deg,var(--accent-soft),var(--accent-soft) 6px,#fff 6px,#fff 12px)!important;border:2px dashed var(--accent)!important;padding:0;}
   td input:hover{border-color:var(--line);}
   td input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px var(--accent-soft);position:relative;z-index:8;}
-  tbody tr:nth-child(even) td.col-brand{background:#fbfaf6;}
-  tbody tr:hover td.col-brand{background:#f1efe5;}
+  tbody tr:nth-child(even) td.col-pinned{background:#fbfaf6;}
+  tbody tr:hover td.col-pinned{background:#f1efe5;}
   .total-val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);}
   .amount-val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#8a5a1f;}
+  .pct-val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#2c6b3e;}
   .del-btn{border:none;background:#fff;color:var(--danger);cursor:pointer;font-size:16px;line-height:1;width:28px;height:28px;border-radius:6px;border:1px solid #e2b6ac;}
   .del-btn:hover{background:var(--danger);color:#fff;}
   tfoot td{border-top:2px solid var(--line-strong);background:var(--accent-soft) !important;font-weight:700;padding:8px 4px;}
-  tfoot .col-brand{text-align:left;font-family:'Source Serif 4',serif;font-size:13px;}
   tfoot .day-col{font-family:'IBM Plex Mono',monospace;font-size:12px;}
-  tfoot .col-total{font-family:'IBM Plex Mono',monospace;color:var(--accent);}
   .footer-actions{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:#faf9f4;flex-wrap:wrap;gap:8px;}
   .hint{font-size:12px;color:var(--ink-soft);}
   .search-row{display:flex;align-items:center;gap:8px;padding:10px 12px 0;flex-wrap:wrap;}
   .search-row input{flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:7px;font-family:inherit;font-size:13.5px;background:#fff;}
   .search-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
   tr.row-hidden{display:none;}
-  tr.row-match td.col-brand{background:#fff6cf !important;}
+  tr.row-match td.col-pinned{background:#fff6cf !important;}
   #printFallback{font-size:12.5px;margin-top:6px;}
   #printFallback a{color:var(--accent);font-weight:600;}
   .backup-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
@@ -144,7 +145,7 @@
     .controls select, .controls .btn{width:100%;min-width:0;box-sizing:border-box;}
     #reportSelect{width:100%;max-width:100%;font-size:15px;padding:10px 12px;}
     table.ledger{font-size:12px;}
-    th.col-brand,td.col-brand{min-width:110px;} th.col-emp,td.col-emp{min-width:90px;}
+    th.col-dyn,td.col-dyn{min-width:96px;}
   }
 </style>
 </head>
@@ -253,6 +254,7 @@
         </div>
         <div class="footer-actions">
           <button class="btn btn-primary" id="addRowBtn">+ Add Brand Row</button>
+          <button class="btn btn-ghost" id="addColBtn">+ Add Column</button>
           <span class="status" id="statusEl"><span class="dot" id="statusDot"></span><span id="statusText">Saved</span></span>
         </div>
       </div>
@@ -288,6 +290,20 @@
     <div class="modal-btns">
       <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
       <button class="btn btn-danger-outline" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addColModalBackdrop">
+  <div class="modal">
+    <h3>Add a new column</h3>
+    <label for="newColName">Column name</label>
+    <input type="text" id="newColName" placeholder="e.g. Discount, Notes, Return Qty" maxlength="40">
+    <p style="font-size:12.5px;margin:-8px 0 12px;">It's added at the right — press and hold its ⠿ handle afterwards to drag it wherever you want.</p>
+    <div class="modal-err" id="addColErr"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="addColCancel">Cancel</button>
+      <button class="btn btn-primary" id="addColCreate">Add Column</button>
     </div>
   </div>
 </div>
@@ -505,8 +521,9 @@
       user_id: session.user.id,
       year: currentReport.year,
       month: currentReport.month,
-      employee_name: currentReport.employee_name || '',
-      rows: currentReport.rows
+      employee_name: empColumnLabel(),
+      rows: currentReport.rows,
+      layout: currentReport.layout
     };
     const { data, error } = await supabase.from('reports').upsert(payload, { onConflict: 'user_id,year,month' }).select().maybeSingle();
     if(!error){ if(data) currentReport.id = data.id; setStatus('saved'); }
@@ -527,6 +544,59 @@
 
   function rowTotal(row){ let sum = 0; for(const k in row.days){ const v = parseFloat(row.days[k]); if(!isNaN(v)) sum += v; } return sum; }
   function rowAmount(row){ const price = parseFloat(row.tradePrice); if(isNaN(price)) return 0; return price * rowTotal(row); }
+  function rowPercentage(row){ const target = parseFloat(row.target); if(!target) return 0; return (rowAmount(row) / target) * 100; }
+  function fmtMoney(n){ return n ? String(n.toFixed(2)).replace(/\.00$/,'') : ''; }
+  function fmtPct(n){ return (n && isFinite(n)) ? String(n.toFixed(1)).replace(/\.0$/,'') + '%' : ''; }
+
+  // The default set of columns for a brand new report. "kind" drives both how a
+  // column's value is stored/computed and how it renders; "label" is just display
+  // text the employee can rename freely — renaming never changes what a column does.
+  function defaultLayout(nameHint){
+    return {
+      before: [
+        { key:'emp', label: nameHint || 'Employee', kind:'emp' },
+        { key:'brand', label:'Brand', kind:'brand' },
+        { key:'price', label:'Trade Price', kind:'price' }
+      ],
+      after: [
+        { key:'totalpkt', label:'TOTAL PKT', kind:'total' },
+        { key:'amount', label:'AMOUNT', kind:'amount' },
+        { key:'target', label:'Target Amount', kind:'target' },
+        { key:'pct', label:'%AGE', kind:'pct' }
+      ]
+    };
+  }
+  function empColumnLabel(){
+    if(!currentReport || !currentReport.layout) return '';
+    const all = [].concat(currentReport.layout.before||[], currentReport.layout.after||[]);
+    const c = all.find(c=> c.kind==='emp');
+    return c ? (c.label || '') : '';
+  }
+
+  function getFieldValue(row, col){
+    switch(col.kind){
+      case 'emp': return row.empVal;
+      case 'brand': return row.brand;
+      case 'price': return row.tradePrice;
+      case 'target': return row.target;
+      case 'custom': return (row.custom && row.custom[col.key]) || '';
+      default: return '';
+    }
+  }
+  function setFieldValue(row, col, val){
+    switch(col.kind){
+      case 'emp': row.empVal = val; break;
+      case 'brand': row.brand = val; break;
+      case 'price': row.tradePrice = val; break;
+      case 'target': row.target = val; break;
+      case 'custom': if(!row.custom) row.custom = {}; row.custom[col.key] = val; break;
+    }
+  }
+  function refreshRowComputed(refs, row){
+    if(refs.totalSpan) refs.totalSpan.textContent = rowTotal(row);
+    if(refs.amountSpan) refs.amountSpan.textContent = fmtMoney(rowAmount(row));
+    if(refs.pctSpan) refs.pctSpan.textContent = fmtPct(rowPercentage(row));
+  }
 
   // Grows an input's width to fit whatever the employee types, so numbers/text
   // never get clipped inside a small cell.
@@ -546,24 +616,16 @@
     holder.style.display = 'block'; empty.style.display = 'none';
     $('printBtn').disabled = false; $('deleteReportBtn').disabled = false;
     $('subtitle').textContent = labelFor(currentReport.year, currentReport.month) + ' · ' + currentReport.rows.length + ' brand row(s)';
-    if(currentReport.employee_name === undefined || currentReport.employee_name === null){
-      currentReport.employee_name = (session.user.user_metadata && session.user.user_metadata.display_name) || '';
-    }
+    if(!currentReport.layout) currentReport.layout = defaultLayout((session.user.user_metadata && session.user.user_metadata.display_name) || '');
+    if(!currentReport.layout.before) currentReport.layout.before = [];
+    if(!currentReport.layout.after) currentReport.layout.after = [];
 
     const nDays = daysInMonth(currentReport.year, currentReport.month);
     const headRow = $('headRow'); headRow.innerHTML = '';
     const actTh0 = document.createElement('th'); actTh0.className = 'col-actions'; headRow.appendChild(actTh0);
     const snoTh = document.createElement('th'); snoTh.className = 'col-sno'; snoTh.textContent = 'S.No'; headRow.appendChild(snoTh);
 
-    const empTh = document.createElement('th'); empTh.className = 'col-emp';
-    const empInput = document.createElement('input');
-    empInput.type = 'text'; empInput.value = currentReport.employee_name || ''; empInput.placeholder = 'Employee name';
-    empInput.addEventListener('input', ()=>{ currentReport.employee_name = empInput.value; queueSave(); });
-    empTh.appendChild(empInput); headRow.appendChild(empTh);
-
-    [['col-brand','Brand'],['col-price','Trade Price'],['col-ctns',"Ctn's"],['col-target','Target Amount']].forEach(c=>{
-      const th = document.createElement('th'); th.className = c[0]; th.textContent = c[1]; headRow.appendChild(th);
-    });
+    currentReport.layout.before.forEach(col=> headRow.appendChild(makeColumnHeader(col, 'before')));
 
     for(let d=1; d<=nDays; d++){
       const th = document.createElement('th'); th.className = 'day-col';
@@ -571,14 +633,15 @@
       if(wd===5) th.className += ' day-friday'; if(wd===0) th.className += ' day-sunday';
       th.textContent = d; headRow.appendChild(th);
     }
-    const totalTh = document.createElement('th'); totalTh.className = 'col-total'; totalTh.textContent = 'TOTAL PKT'; headRow.appendChild(totalTh);
-    const amountTh = document.createElement('th'); amountTh.className = 'col-amount'; amountTh.textContent = 'AMOUNT'; headRow.appendChild(amountTh);
+
+    currentReport.layout.after.forEach(col=> headRow.appendChild(makeColumnHeader(col, 'after')));
 
     const body = $('bodyRows'); body.innerHTML = '';
     currentReport.rows.forEach((row, idx)=>{
       const tr = document.createElement('tr');
       tr.dataset.brand = (row.brand || '').toLowerCase();
       tr.dataset.rowId = row.id;
+      const refs = {};
 
       const actTd = document.createElement('td'); actTd.className = 'col-actions';
       const delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.innerHTML = '✕'; delBtn.title = 'Delete this row';
@@ -594,11 +657,7 @@
       snoTd.appendChild(snoSpan); tr.appendChild(snoTd);
       attachRowDrag(snoSpan, tr);
 
-      tr.appendChild(makeInputCell('col-emp', row.empVal, 'number', (val)=>{ row.empVal = val; queueSave(); }, null, 5));
-      tr.appendChild(makeInputCell('col-brand', row.brand, 'text', (val)=>{ row.brand = val; tr.dataset.brand = val.toLowerCase(); queueSave(); }, 'Brand name', 10));
-      tr.appendChild(makeInputCell('col-price', row.tradePrice, 'number', (val)=>{ row.tradePrice = val; amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,''); queueSave(); updateFooter(); }, null, 5));
-      tr.appendChild(makeInputCell('col-ctns', row.ctns, 'number', (val)=>{ row.ctns = val; queueSave(); }, null, 4));
-      tr.appendChild(makeInputCell('col-target', row.target, 'number', (val)=>{ row.target = val; queueSave(); }, null, 4));
+      currentReport.layout.before.forEach(col=> tr.appendChild(makeColumnCell(col, row, refs, tr)));
 
       for(let d=1; d<=nDays; d++){
         const td = document.createElement('td'); td.className = 'day-col';
@@ -608,20 +667,13 @@
         inp.addEventListener('input', ()=>{
           row.days[d] = inp.value === '' ? null : inp.value;
           autosizeInput(inp, 4);
-          totalSpan.textContent = rowTotal(row);
-          amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,'');
+          refreshRowComputed(refs, row);
           queueSave(); updateFooter();
         });
         td.appendChild(inp); tr.appendChild(td);
       }
 
-      const totalTd = document.createElement('td'); totalTd.className = 'col-total';
-      const totalSpan = document.createElement('span'); totalSpan.className = 'total-val'; totalSpan.textContent = rowTotal(row);
-      totalTd.appendChild(totalSpan); tr.appendChild(totalTd);
-
-      const amountTd = document.createElement('td'); amountTd.className = 'col-amount';
-      const amountSpan = document.createElement('span'); amountSpan.className = 'amount-val'; amountSpan.textContent = rowAmount(row).toFixed(2).replace(/\.00$/,'');
-      amountTd.appendChild(amountSpan); tr.appendChild(amountTd);
+      currentReport.layout.after.forEach(col=> tr.appendChild(makeColumnCell(col, row, refs, tr)));
 
       body.appendChild(tr);
     });
@@ -629,15 +681,69 @@
     applyBrandSearch();
   }
 
-  function makeInputCell(cls, value, type, onChange, placeholder, minCh){
-    const td = document.createElement('td'); td.className = cls;
-    const inp = document.createElement('input'); inp.type = type;
-    if(type==='number') inp.inputMode = 'decimal';
-    if(placeholder) inp.placeholder = placeholder;
-    inp.value = (value===undefined || value===null) ? '' : value;
-    autosizeInput(inp, minCh || 3);
-    inp.addEventListener('input', ()=>{ autosizeInput(inp, minCh || 3); onChange(inp.value===''?'':inp.value); });
-    td.appendChild(inp); return td;
+  // Builds one <th>: a drag handle + an editable label input, so every column can be
+  // renamed. Custom columns also get a small remove button; built-in columns don't.
+  function makeColumnHeader(col, zoneName){
+    const th = document.createElement('th');
+    th.className = 'col-dyn' + (col.kind==='brand' ? ' col-pinned' : '');
+    th.dataset.zone = zoneName;
+    th.dataset.colKey = col.key;
+    const wrap = document.createElement('div'); wrap.className = 'col-head-wrap';
+    const handle = document.createElement('span'); handle.className = 'col-drag-handle'; handle.innerHTML = '⠿'; handle.title = 'Press and hold to move this column';
+    wrap.appendChild(handle);
+    const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'col-label-input';
+    inp.value = col.label || ''; autosizeInput(inp, 6); inp.style.minWidth = '50px';
+    inp.addEventListener('input', ()=>{ col.label = inp.value; autosizeInput(inp, 6); queueSave(); });
+    wrap.appendChild(inp);
+    if(col.kind === 'custom'){
+      const delBtn = document.createElement('button'); delBtn.type = 'button'; delBtn.className = 'col-del-btn'; delBtn.innerHTML = '✕'; delBtn.title = 'Remove this column';
+      delBtn.addEventListener('click', ()=>{
+        showConfirm('Remove column?', 'Remove the "' + (col.label || 'this') + '" column and all its values? This cannot be undone.', 'Remove', ()=>{
+          const arr = currentReport.layout[zoneName];
+          const i = arr.indexOf(col); if(i!==-1) arr.splice(i,1);
+          queueSave(); renderTable();
+        });
+      });
+      wrap.appendChild(delBtn);
+    }
+    th.appendChild(wrap);
+    attachColumnDrag(handle, col, zoneName);
+    return th;
+  }
+
+  // Builds one <td> for a row: a plain input for editable columns (Employee, Brand,
+  // Trade Price, Target Amount, and any custom column), or a read-only computed span
+  // for TOTAL PKT / AMOUNT / %AGE, which always reflect the day entries automatically.
+  function makeColumnCell(col, row, refs, tr){
+    const td = document.createElement('td'); td.className = 'col-dyn' + (col.kind==='brand' ? ' col-pinned' : '');
+    if(col.kind === 'total'){
+      const span = document.createElement('span'); span.className = 'total-val'; span.textContent = rowTotal(row);
+      td.appendChild(span); refs.totalSpan = span; return td;
+    }
+    if(col.kind === 'amount'){
+      const span = document.createElement('span'); span.className = 'amount-val'; span.textContent = fmtMoney(rowAmount(row));
+      td.appendChild(span); refs.amountSpan = span; return td;
+    }
+    if(col.kind === 'pct'){
+      const span = document.createElement('span'); span.className = 'pct-val'; span.textContent = fmtPct(rowPercentage(row));
+      td.appendChild(span); refs.pctSpan = span; return td;
+    }
+    const isText = col.kind === 'brand' || col.kind === 'custom';
+    const minCh = col.kind === 'brand' ? 10 : (col.kind === 'custom' ? 8 : 4);
+    const inp = document.createElement('input'); inp.type = isText ? 'text' : 'number';
+    if(!isText) inp.inputMode = 'decimal';
+    if(col.kind === 'brand') inp.placeholder = 'Brand name';
+    inp.value = getFieldValue(row, col) || '';
+    autosizeInput(inp, minCh);
+    inp.addEventListener('input', ()=>{
+      autosizeInput(inp, minCh);
+      setFieldValue(row, col, inp.value === '' ? '' : inp.value);
+      if(col.kind === 'brand') tr.dataset.brand = inp.value.toLowerCase();
+      refreshRowComputed(refs, row);
+      queueSave(); updateFooter();
+    });
+    td.appendChild(inp);
+    return td;
   }
 
   // ---------------- row reordering: press and hold the S.No handle, then drag ----------------
@@ -722,6 +828,73 @@
     handleEl.addEventListener('pointerdown', onPointerDown);
   }
 
+  // ---------------- column reordering: press and hold a column's grip, then drag left/right ----------------
+  // A column can only be dropped among the other columns in its own zone (the group
+  // before the daily entries, or the group after them) — the calendar days themselves
+  // never move.
+  function attachColumnDrag(handleEl, col, zoneName){
+    let pressTimer = null, startX = 0, startY = 0;
+    function cancelPress(){ clearTimeout(pressTimer); pressTimer = null; }
+    function onPointerDown(e){
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      startX = e.clientX; startY = e.clientY;
+      cancelPress();
+      pressTimer = setTimeout(()=> startDrag(), 450);
+      handleEl.addEventListener('pointermove', onPreMove);
+      handleEl.addEventListener('pointerup', onPreUp);
+      handleEl.addEventListener('pointercancel', onPreUp);
+    }
+    function onPreMove(e){ if(Math.abs(e.clientX-startX) > 10 || Math.abs(e.clientY-startY) > 10) cancelPress(); }
+    function onPreUp(){
+      cancelPress();
+      handleEl.removeEventListener('pointermove', onPreMove);
+      handleEl.removeEventListener('pointerup', onPreUp);
+      handleEl.removeEventListener('pointercancel', onPreUp);
+    }
+
+    function startDrag(){
+      const th = handleEl.closest('th');
+      if(!th) return;
+      th.classList.add('col-dragging');
+      if(navigator.vibrate) try{ navigator.vibrate(15); }catch(err){}
+      const placeholder = document.createElement('th');
+      placeholder.className = 'col-drop-placeholder';
+      th.parentNode.insertBefore(placeholder, th.nextSibling);
+
+      function zoneSiblings(){
+        return Array.from($('headRow').querySelectorAll('th[data-zone="'+zoneName+'"]')).filter(h=> h!==th && h!==placeholder);
+      }
+      function onMove(ev){
+        const x = ev.clientX;
+        const sibs = zoneSiblings();
+        let target = null;
+        for(const h of sibs){
+          const r = h.getBoundingClientRect();
+          if(x < r.left + r.width/2){ target = h; break; }
+        }
+        if(target){ target.parentNode.insertBefore(placeholder, target); }
+        else if(sibs.length){ sibs[sibs.length-1].parentNode.insertBefore(placeholder, sibs[sibs.length-1].nextSibling); }
+      }
+      function onUp(){
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        document.removeEventListener('pointercancel', onUp);
+        th.classList.remove('col-dragging');
+        placeholder.parentNode.insertBefore(th, placeholder);
+        placeholder.remove();
+        const newOrderKeys = Array.from($('headRow').querySelectorAll('th[data-zone="'+zoneName+'"]')).map(h=> h.dataset.colKey);
+        currentReport.layout[zoneName].sort((a,b)=> newOrderKeys.indexOf(a.key) - newOrderKeys.indexOf(b.key));
+        queueSave();
+        renderTable();
+      }
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    }
+
+    handleEl.addEventListener('pointerdown', onPointerDown);
+  }
+
   // ---------------- brand search ----------------
   function applyBrandSearch(){
     const q = ($('brandSearch').value || '').trim().toLowerCase();
@@ -742,37 +915,50 @@
     }
   }
 
+  function footCellFor(col, sums){
+    const td = document.createElement('td'); td.className = 'col-dyn' + (col.kind==='brand' ? ' col-pinned' : '');
+    switch(col.kind){
+      case 'brand': td.textContent = 'Grand Total'; td.style.fontFamily = "'Source Serif 4',serif"; break;
+      case 'emp': td.textContent = sums.emp || ''; break;
+      case 'target': td.textContent = sums.target || ''; break;
+      case 'total': td.textContent = sums.total || ''; break;
+      case 'amount': td.textContent = sums.amount ? fmtMoney(sums.amount) : ''; break;
+      case 'pct': td.textContent = sums.target ? fmtPct((sums.amount / sums.target) * 100) : ''; break;
+      case 'custom': {
+        let s = 0, any = false;
+        currentReport.rows.forEach(row=>{ const v = parseFloat(row.custom && row.custom[col.key]); if(!isNaN(v)){ s += v; any = true; } });
+        td.textContent = any ? s : '';
+        break;
+      }
+      default: break;
+    }
+    return td;
+  }
+
   function updateFooter(){
     if(!currentReport) return;
     const nDays = daysInMonth(currentReport.year, currentReport.month);
     const foot = $('footRow'); foot.innerHTML = '';
-    let targetSum = 0, ctnsSum = 0, empSum = 0, amountSum = 0;
+    const sums = { amount:0, target:0, total:0, emp:0 };
     currentReport.rows.forEach(row=>{
-      const t = parseFloat(row.target); if(!isNaN(t)) targetSum += t;
-      const c = parseFloat(row.ctns); if(!isNaN(c)) ctnsSum += c;
-      const e = parseFloat(row.empVal); if(!isNaN(e)) empSum += e;
-      amountSum += rowAmount(row);
+      sums.amount += rowAmount(row);
+      sums.total += rowTotal(row);
+      const t = parseFloat(row.target); if(!isNaN(t)) sums.target += t;
+      const e = parseFloat(row.empVal); if(!isNaN(e)) sums.emp += e;
     });
     const actBlank = document.createElement('td'); actBlank.className='col-actions'; foot.appendChild(actBlank);
     const snoBlank = document.createElement('td'); snoBlank.className='col-sno'; foot.appendChild(snoBlank);
-    const empTd = document.createElement('td'); empTd.className='col-emp'; empTd.textContent = empSum || ''; foot.appendChild(empTd);
-    const labelTd = document.createElement('td'); labelTd.className = 'col-brand'; labelTd.textContent = 'Grand Total'; foot.appendChild(labelTd);
-    const priceBlank = document.createElement('td'); priceBlank.className='col-price'; foot.appendChild(priceBlank);
-    const ctnsTd = document.createElement('td'); ctnsTd.className='col-ctns'; ctnsTd.textContent = ctnsSum || ''; foot.appendChild(ctnsTd);
-    const targetTd = document.createElement('td'); targetTd.className='col-target'; targetTd.textContent = targetSum || ''; foot.appendChild(targetTd);
-    let grand = 0;
+    currentReport.layout.before.forEach(col=> foot.appendChild(footCellFor(col, sums)));
     for(let d=1; d<=nDays; d++){
       let sum = 0; currentReport.rows.forEach(row=>{ const v = parseFloat(row.days[d]); if(!isNaN(v)) sum += v; });
-      grand += sum;
       const td = document.createElement('td'); td.className = 'day-col'; td.textContent = sum || ''; foot.appendChild(td);
     }
-    const gtd = document.createElement('td'); gtd.className = 'col-total'; gtd.textContent = grand; foot.appendChild(gtd);
-    const atd = document.createElement('td'); atd.className = 'col-amount'; atd.textContent = amountSum ? amountSum.toFixed(2).replace(/\.00$/,'') : ''; foot.appendChild(atd);
+    currentReport.layout.after.forEach(col=> foot.appendChild(footCellFor(col, sums)));
   }
 
   async function selectReport(id){
     const rep = await fetchReport(id);
-    currentReport = rep ? { id: rep.id, year: rep.year, month: rep.month, employee_name: rep.employee_name, rows: rep.rows || [] } : null;
+    currentReport = rep ? { id: rep.id, year: rep.year, month: rep.month, employee_name: rep.employee_name, rows: rep.rows || [], layout: rep.layout || null } : null;
     renderTable();
   }
 
@@ -793,7 +979,8 @@
       const existing = reportsList.find(r=>r.year===year && r.month===month);
       closeModal(); await selectReport(existing.id); $('reportSelect').value = existing.id; return;
     }
-    const payload = { user_id: session.user.id, year, month, employee_name: (session.user.user_metadata && session.user.user_metadata.display_name) || '', rows: [] };
+    const nameHint = (session.user.user_metadata && session.user.user_metadata.display_name) || '';
+    const payload = { user_id: session.user.id, year, month, employee_name: nameHint, rows: [], layout: defaultLayout(nameHint) };
     const { data, error } = await supabase.from('reports').insert(payload).select().single();
     if(error){ errEl.textContent = 'Could not create report: ' + error.message; return; }
     await fetchReportsList();
@@ -817,48 +1004,103 @@
   }
 
   function addRow(){
-    currentReport.rows.push({ id: uid(), target:'', brand:'', tradePrice:'', ctns:'', empVal:'', days:{} });
+    currentReport.rows.push({ id: uid(), target:'', brand:'', tradePrice:'', empVal:'', custom:{}, days:{} });
     queueSave(); renderTable();
+  }
+
+  // ---------------- add custom column ----------------
+  function openAddColModal(){ $('newColName').value=''; $('addColErr').textContent=''; $('addColModalBackdrop').classList.add('show'); setTimeout(()=> $('newColName').focus(), 50); }
+  function closeAddColModal(){ $('addColModalBackdrop').classList.remove('show'); }
+  function createColumn(){
+    const name = $('newColName').value.trim();
+    if(!name){ $('addColErr').textContent = 'Give the column a name.'; return; }
+    if(!currentReport.layout) currentReport.layout = defaultLayout();
+    if(!currentReport.layout.after) currentReport.layout.after = [];
+    currentReport.layout.after.push({ key: 'custom_' + uid(), label: name, kind: 'custom' });
+    queueSave();
+    closeAddColModal();
+    renderTable();
   }
 
   // ---------------- print ----------------
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function printCellValue(col, row){
+    switch(col.kind){
+      case 'emp': return row.empVal || '';
+      case 'brand': return row.brand || '';
+      case 'price': return row.tradePrice || '';
+      case 'target': return row.target || '';
+      case 'total': return rowTotal(row) || '';
+      case 'amount': return fmtMoney(rowAmount(row));
+      case 'pct': return fmtPct(rowPercentage(row));
+      case 'custom': return (row.custom && row.custom[col.key]) || '';
+      default: return '';
+    }
+  }
+  function printFootValue(col, sums){
+    switch(col.kind){
+      case 'brand': return 'Grand Total';
+      case 'emp': return sums.emp || '';
+      case 'target': return sums.target || '';
+      case 'total': return sums.total || '';
+      case 'amount': return sums.amount ? fmtMoney(sums.amount) : '';
+      case 'pct': return sums.target ? fmtPct((sums.amount / sums.target) * 100) : '';
+      case 'custom': {
+        let s = 0, any = false;
+        currentReport.rows.forEach(row=>{ const v = parseFloat(row.custom && row.custom[col.key]); if(!isNaN(v)){ s += v; any = true; } });
+        return any ? s : '';
+      }
+      default: return '';
+    }
+  }
+
   function buildPrintDocument(){
     const nDays = daysInMonth(currentReport.year, currentReport.month);
-    // Title always uses the name from registration; the column header can be a custom label the employee typed.
+    // Title always uses the name from registration; column headers use whatever label the employee set.
     const registeredName = (session.user.user_metadata && session.user.user_metadata.display_name) || session.user.email;
     const printTitleName = escapeHtml(registeredName);
-    const colLabel = escapeHtml(currentReport.employee_name || registeredName);
-    let rows = '';
-    currentReport.rows.forEach((row, idx)=>{
-      rows += '<tr><td>'+(idx+1)+'</td><td>'+escapeHtml(row.empVal||'')+'</td><td class="p-brand">'+escapeHtml(row.brand||'')+'</td><td>'+escapeHtml(row.tradePrice||'')+'</td><td>'+escapeHtml(row.ctns||'')+'</td><td>'+escapeHtml(row.target||'')+'</td>';
-      for(let d=1; d<=nDays; d++){
-        const wd = weekday(currentReport.year, currentReport.month, d);
-        const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
-        const v = row.days[d];
-        rows += '<td class="'+cls+'">'+(v===undefined||v===null||v===''?'':escapeHtml(v))+'</td>';
-      }
-      const amt = rowAmount(row);
-      rows += '<td>'+rowTotal(row)+'</td><td>'+(amt?amt.toFixed(2).replace(/\.00$/,''):'')+'</td></tr>';
+    const layout = currentReport.layout || defaultLayout();
+
+    const sums = { amount:0, target:0, total:0, emp:0 };
+    currentReport.rows.forEach(row=>{
+      sums.amount += rowAmount(row);
+      sums.total += rowTotal(row);
+      const t = parseFloat(row.target); if(!isNaN(t)) sums.target += t;
+      const e = parseFloat(row.empVal); if(!isNaN(e)) sums.emp += e;
     });
+
+    const headBefore = layout.before.map(c=> '<th>'+escapeHtml(c.label)+'</th>').join('');
+    const headAfter = layout.after.map(c=> '<th>'+escapeHtml(c.label)+'</th>').join('');
     let headDays = '';
     for(let d=1; d<=nDays; d++){
       const wd = weekday(currentReport.year, currentReport.month, d);
       const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
       headDays += '<th class="'+cls+'">'+d+'</th>';
     }
-    let footDays = ''; let grand = 0;
+
+    let rows = '';
+    currentReport.rows.forEach((row, idx)=>{
+      const rowBefore = layout.before.map(c=> '<td'+(c.kind==='brand'?' class="p-brand"':'')+'>'+escapeHtml(String(printCellValue(c,row)))+'</td>').join('');
+      let rowDays = '';
+      for(let d=1; d<=nDays; d++){
+        const wd = weekday(currentReport.year, currentReport.month, d);
+        const cls = wd===5 ? 'p-friday' : (wd===0 ? 'p-sunday' : '');
+        const v = row.days[d];
+        rowDays += '<td class="'+cls+'">'+(v===undefined||v===null||v===''?'':escapeHtml(v))+'</td>';
+      }
+      const rowAfter = layout.after.map(c=> '<td>'+escapeHtml(String(printCellValue(c,row)))+'</td>').join('');
+      rows += '<tr><td>'+(idx+1)+'</td>'+rowBefore+rowDays+rowAfter+'</tr>';
+    });
+
+    const footBefore = layout.before.map(c=> '<td'+(c.kind==='brand'?' class="p-brand"':'')+'>'+escapeHtml(String(printFootValue(c,sums)))+'</td>').join('');
+    let footDays = '';
     for(let d=1; d<=nDays; d++){
       let sum = 0; currentReport.rows.forEach(row=>{ const v = parseFloat(row.days[d]); if(!isNaN(v)) sum+=v; });
-      grand += sum; footDays += '<td>'+(sum||'')+'</td>';
+      footDays += '<td>'+(sum||'')+'</td>';
     }
-    let targetSum = 0, ctnsSum = 0, empSum = 0, amountSum = 0;
-    currentReport.rows.forEach(row=>{
-      const t = parseFloat(row.target); if(!isNaN(t)) targetSum += t;
-      const c = parseFloat(row.ctns); if(!isNaN(c)) ctnsSum += c;
-      const e = parseFloat(row.empVal); if(!isNaN(e)) empSum += e;
-      amountSum += rowAmount(row);
-    });
+    const footAfter = layout.after.map(c=> '<td>'+escapeHtml(String(printFootValue(c,sums)))+'</td>').join('');
+
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+labelFor(currentReport.year,currentReport.month)+' Target</title>'
       + '<style>@page{size:landscape;margin:8mm;} '
       + '*{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }'
@@ -869,8 +1111,8 @@
       + '.p-brand{text-align:left;white-space:nowrap;} .p-friday{background:#bfe3ae;} .p-sunday{background:#f3b2a8;}'
       + 'tfoot td{font-weight:700;background:#f2f0e8;}</style></head><body>'
       + '<div class="title">'+labelFor(currentReport.year,currentReport.month)+' Target — '+printTitleName+'</div>'
-      + '<table><thead><tr><th>S.No</th><th>'+colLabel+'</th><th>Brand</th><th>Trade Price</th><th>Ctn\'s</th><th>Target Amount</th>'+headDays+'<th>TOTAL PKT</th><th>AMOUNT</th></tr></thead>'
-      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td><td>'+(empSum||'')+'</td><td class="p-brand">Grand Total</td><td></td><td>'+(ctnsSum||'')+'</td><td>'+(targetSum||'')+'</td>'+footDays+'<td>'+grand+'</td><td>'+(amountSum?amountSum.toFixed(2).replace(/\.00$/,''):'')+'</td></tr></tfoot></table>'
+      + '<table><thead><tr><th>S.No</th>'+headBefore+headDays+headAfter+'</tr></thead>'
+      + '<tbody>'+rows+'</tbody><tfoot><tr><td></td>'+footBefore+footDays+footAfter+'</tr></tfoot></table>'
       + '<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 250); };<\/script></body></html>';
   }
   function doPrint(){
@@ -910,6 +1152,11 @@
     $('modalCreate').addEventListener('click', createReport);
     $('modalBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); });
     $('addRowBtn').addEventListener('click', addRow);
+    $('addColBtn').addEventListener('click', openAddColModal);
+    $('addColCancel').addEventListener('click', closeAddColModal);
+    $('addColCreate').addEventListener('click', createColumn);
+    $('addColModalBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='addColModalBackdrop') closeAddColModal(); });
+    $('newColName').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); createColumn(); } });
     $('printBtn').addEventListener('click', doPrint);
     $('deleteReportBtn').addEventListener('click', deleteReport);
     $('exportBtn').addEventListener('click', exportBackup);
